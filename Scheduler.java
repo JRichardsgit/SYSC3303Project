@@ -78,7 +78,7 @@ public class Scheduler {
       sendPacket = new DatagramPacket(msg, msg.length,
                                receivePacket.getAddress(), receivePacket.getPort());
 
-      System.out.println( "Server: Sending packet:");
+      System.out.println( "Scheduler: Sending packet:");
       System.out.println("To host: " + sendPacket.getAddress());
       System.out.println("Destination host port: " + sendPacket.getPort());
       len = sendPacket.getLength();
