@@ -1,10 +1,13 @@
+import java.io.Serializable;
+
 /**
  * Data structure Class for Floor DataPackets
  */
-public class FloorData {
+public class FloorData implements Serializable {
 	
 	private final int floorNum; //The number of the floor
 	private final boolean upPressed; //True if up is pressed, false otherwise
+	private String status;
 	
 	/**
 	 * Create a new FloorData object with the given floorNum and up/down setting
@@ -42,6 +45,22 @@ public class FloorData {
 	 */
 	public int getFloorNum() {
 		return floorNum;
+	}
+	
+	/**
+	 * Sets the floor's status
+	 * @param status the status of the floor
+	 */
+	public void setStatus(String status) {
+		this.status = status;
+	}
+	
+	/**
+	 * Returns the status of the floor
+	 * @return the status of the floor
+	 */
+	public String getStatus() {
+		return status;
 	}
 
 }

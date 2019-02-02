@@ -1,3 +1,4 @@
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
@@ -5,10 +6,11 @@ import java.util.ArrayList;
  * Data Structure class for ElevatorData
  *
  */
-public class ElevatorData {
+public class ElevatorData implements Serializable {
 	private final int currFloor; //the elevator's current floor
 	private ArrayList<Integer> destFloor; //the floor destinations
 	private boolean movingUp; //true if elevator is moving up, false otherwise
+	private String status;
 	
 	/**
 	 * 
@@ -20,8 +22,9 @@ public class ElevatorData {
 		this.currFloor = currFloor;
 		this.destFloor = destFloor;
 		this.movingUp = movingUp;
-		
 	}
+	
+	/**
 	
 	/**
 	 * Returns the elevator's current floor
@@ -58,4 +61,21 @@ public class ElevatorData {
 			return true;
 		return false;
 	}
+	
+	/**
+	 * Sets the elevator's status
+	 * @param status the status of the elevator
+	 */
+	public void setStatus(String status) {
+		this.status = status;
+	}
+	
+	/**
+	 * Returns the status of the elevator
+	 * @return the status of the elevator
+	 */
+	public String getStatus() {
+		return status;
+	}
+
 }
