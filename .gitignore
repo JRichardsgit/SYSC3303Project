@@ -4,3 +4,9 @@
 /FloorData.class
 /ElevatorData.class
 /SchedulerData.class
+/ElevatorTest.class
+/FloorTest.class
+/SchedulerTest.class
+/AllTests.class
+/TestRunner.class
+/TestElevatorData.class

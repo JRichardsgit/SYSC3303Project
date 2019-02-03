@@ -155,6 +155,14 @@ public class Elevator {
 			System.exit(1);
 		}
 	}
+	
+	public ElevatorData getElevatorData() {
+		return elevDat;
+	}
+	
+	public SchedulerData getSchedulerData() {
+		return scheDat;
+	}
 
 	public static void main(String args[]) {
 		Elevator c = new Elevator();

@@ -144,6 +144,14 @@ public class Floor {
 	public String getElevatorStatus() {
 		return elevatorStatus;
 	}
+	
+	public FloorData getFloorData() {
+		return floorDat;
+	}
+	
+	public SchedulerData getSchedulerData() {
+		return scheDat;
+	}
 
 	public static void main(String args[]) {
 		Floor c = new Floor();

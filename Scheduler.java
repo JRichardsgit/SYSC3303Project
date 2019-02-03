@@ -57,9 +57,7 @@ public class Scheduler {
 	}
 
 	public void floorSend() {
-		String s = "i am the scheduler packet letting you know the message request has been recieved. "
-				+ "I will now get an elevator for you.";
-
+		
 		try {
 			scheDat = new SchedulerData(floorLamps, destFloors);
 			scheDat.setStatus("Scheduler received reply from Elevator. Elevator is arriving shortly.");
@@ -256,6 +254,18 @@ public class Scheduler {
 			e.printStackTrace();
 			System.exit(1);
 		}
+	}
+	
+	public ElevatorData getElevatorData() {
+		return elevDat;
+	}
+	
+	public SchedulerData getSchedulerData() {
+		return scheDat;
+	}
+	
+	public FloorData getFloorData() {
+		return floorDat;
 	}
 
 	public static void main(String args[]) {
