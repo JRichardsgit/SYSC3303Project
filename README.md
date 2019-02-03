@@ -20,3 +20,5 @@ Setup Instructions:
 After, Use the "display selected console" to show each console output, starting from floor, then scheduler output, then elevator output.
 
 The flow is as follows: Floor requests and elevator from scheduler, Scheduler notifies request has been recieved and contacts elevator system, the elevator system processes information and sends an elevator and notifies scheduler.
+
+Testing and error handling are incorporated in the classes.
