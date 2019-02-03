@@ -1,4 +1,4 @@
-# SYSC3303Project iteration 1
+# SYSC 3303 Project Iteration 1
 
 This project aims to design a real time elevator control system that will quickly and efficiently transport passengers between floors.
 
