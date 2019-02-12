@@ -1,5 +1,4 @@
-# SYSC 3303 Project Iteration 1
-
+# SYSC 3303 Project, Gabriele Sarwar, Jolar Tabungar, James Richards, Akash Joe, Ryan Tordesillas
 This project aims to design a real time elevator control system that will quickly and efficiently transport passengers between floors.
 
 ## Classes:
