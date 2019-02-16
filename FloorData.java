@@ -1,11 +1,11 @@
 import java.io.Serializable;
 
 /**
- * Data structure Class for Floor DataPackets
+ * Data structure Class for FloorSubsystem DataPackets
  */
 public class FloorData implements Serializable {
 	
-	private final int floorNum; //The number of the floor
+	private final int floorNum; //The number of the floorSubsystem
 	private final boolean upPressed; //True if up is pressed, false otherwise
 	private String status;
 	
@@ -40,24 +40,24 @@ public class FloorData implements Serializable {
 	}
 	
 	/**
-	 * Returns the number of the floor
-	 * @return the number of the floor
+	 * Returns the number of the floorSubsystem
+	 * @return the number of the floorSubsystem
 	 */
 	public int getFloorNum() {
 		return floorNum;
 	}
 	
 	/**
-	 * Sets the floor's status
-	 * @param status the status of the floor
+	 * Sets the floorSubsystem's status
+	 * @param status the status of the floorSubsystem
 	 */
 	public void setStatus(String status) {
 		this.status = status;
 	}
 	
 	/**
-	 * Returns the status of the floor
-	 * @return the status of the floor
+	 * Returns the status of the floorSubsystem
+	 * @return the status of the floorSubsystem
 	 */
 	public String getStatus() {
 		return status;

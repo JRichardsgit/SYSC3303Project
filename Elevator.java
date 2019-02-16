@@ -1,171 +1,144 @@
-
-/**
- * This implementation of the Elevator Class
- */
-
-import java.io.*;
-import java.net.*;
 import java.util.ArrayList;
 
-public class Elevator {
-
-	DatagramPacket sendPacket, receivePacket;
-	DatagramSocket sendSocket, receiveSocket;
-
-	private String status;
+/**
+ * Elevator Node Implementation
+ */
+public class Elevator extends Thread {
+	
+	//Elevator Status
+	private String status; 
+	
+	//Elevator Number
+	private final int elevatorNum; 
+	
+	//Movement flags
 	private boolean movingUp;
-	private ArrayList<Integer> destFloors;
+	private boolean movingDown;
+	
+	//Door flag
+	private boolean doorOpen;
+	
+	//Reference to Elevator Subsystem
+	private ElevatorSubsystem eSystem;
+	
+	//Floor Information
+	private ArrayList<Integer> reqFloors;
 	private int currFloor;
-
-	private ElevatorData elevDat;
-	private SchedulerData scheDat;
-
-	public Elevator() {
-		try {
-			// Construct a datagram socket and bind it to any available
-			// port on the local host machine. This socket will be used to
-			// send UDP Datagram packets.
-			sendSocket = new DatagramSocket();
-
-			// Construct a datagram socket and bind it to port 2000
-			// on the local host machine. This socket will be used to
-			// receive UDP Datagram packets.
-			receiveSocket = new DatagramSocket(2000);
-
-			// to test socket timeout (2 seconds)
-			// receiveSocket.setSoTimeout(2000);
-		} catch (SocketException se) {
-			se.printStackTrace();
-			System.exit(1);
-		}
-
-		status = "idle";
-
+	
+	/**
+	 * Creates a new elevator node
+	 * @param elevatorNum this elevator's number
+	 * @param eSystem reference to the elevator subsystem
+	 */
+	public Elevator(int elevatorNum, ElevatorSubsystem eSystem) {
+		this.elevatorNum = elevatorNum;
+		this.eSystem = eSystem;
+		status = "Idle";
+		movingUp = false;
+		movingDown = false;
+		doorOpen = false;
+		reqFloors = new ArrayList<Integer>();
+		currFloor = 0;
 	}
-
-	public void receiveAndReply() {
-		receive();
-		wait5s();
-		send();
-		// We're finished, so close the sockets.
-		sendSocket.close();
-		receiveSocket.close();
+	
+	/**
+	 * Set flags for motor moving the elevator up
+	 */
+	public void moveUp() {
+		movingUp = true;
+		movingDown = false;
 	}
-
-	public void send() {
-
-		try {
-			elevDat = new ElevatorData(currFloor, destFloors, movingUp);
-			elevDat.setStatus("Elevator received request. Heading to destination floor.");
-			// Convert the FloorData object into a byte array
-			ByteArrayOutputStream baoStream = new ByteArrayOutputStream();
-			ObjectOutputStream ooStream = new ObjectOutputStream(new BufferedOutputStream(baoStream));
-			ooStream.flush();
-			ooStream.writeObject(elevDat);
-			ooStream.flush();
-
-			byte msg[] = baoStream.toByteArray();
-			sendPacket = new DatagramPacket(msg, msg.length, receivePacket.getAddress(), 4000);
-
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-
-		processSend();
-
-		// Send the datagram packet to the client via the send socket.
-		try {
-			sendSocket.send(sendPacket);
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
-
-		System.out.println("Elevator: Packet sent to scheduler.\n");
-
+	
+	/**
+	 * Set flags for motor moving the elevator down
+	 */
+	public void moveDown() {
+		movingUp = false;
+		movingDown = true;
 	}
-
-	public void receive() {
-		// Construct a DatagramPacket for receiving packets up
-		// to 100 bytes long (the length of the byte array).
-
-		byte data[] = new byte[5000];
-		receivePacket = new DatagramPacket(data, data.length);
-		System.out.println("Elevator: Waiting for Packet.\n");
-
-		// Block until a datagram packet is received from receiveSocket.
-		try {
-			System.out.println("Waiting..."); // so we know we're waiting
-			receiveSocket.receive(receivePacket);
-		} catch (IOException e) {
-			System.out.print("IO Exception: likely:");
-			System.out.println("Receive Socket Timed Out.\n" + e);
-			e.printStackTrace();
-			System.exit(1);
-		}
+	
+	/**
+	 * Set flags for idle motor
+	 */
+	public void moveStop() {
+		movingUp = false;
+		movingDown = false;
+	}
+	
+	/**
+	 * Move the elevator the requested floor
+	 * @param floorNum requested floor
+	 */
+	public void moveToFloor(int floorNum) {
+		print("Elevator " + elevatorNum + " currently on floor " + currFloor + " .");
+		print("Elevator " + elevatorNum + " moving to floor" + currFloor + " .");
 		
-		try {
-			//Retrieve the ElevatorData object from the receive packet
-			ByteArrayInputStream byteStream = new ByteArrayInputStream(data);
-			ObjectInputStream is;
-			is = new ObjectInputStream(new BufferedInputStream(byteStream));
-			Object o = is.readObject();
-			is.close();
+		if (floorNum > currFloor) {
+			moveUp();
+		}
+		else if (floorNum < currFloor) {
+			moveDown();
+			simulateWait(Math.abs(floorNum - currFloor) * 3000);
+		}
+		else {
+			//Do nothing, elevator is already on the floor
+		}
 			
-			scheDat = (SchedulerData) o;
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		processReceive();
+		print("Arrived at floor " + floorNum + ".");
+		reqFloors.remove((Integer) floorNum);
 		
-		System.out.println("Elevator: Packet received from scheduler.\n");
+		print("Opening doors.");
+		simulateWait(2000);
+		openDoor();
+		
+		print("Closing doors.");
+		simulateWait(2000);
+		closeDoor();
 	}
-
-	public void processSend() {
-		System.out.println("Elevator: Sending packet:");
-		System.out.println("To host: elevator system");
-		System.out.println("Destination host port: " + sendPacket.getPort());
-		int len = sendPacket.getLength();
-		System.out.println("Length: " + len);
-		System.out.print("Containing: " + elevDat.getStatus() + "\n");
+	
+	/**
+	 * Request a floor from within the elevator
+	 * @param floorNum the requested floor
+	 */
+	public void chooseFloor(int floorNum) {
+		//Only add requested floor if not already requested
+		if (!reqFloors.contains((Integer) floorNum))
+			reqFloors.add(floorNum);
 	}
-
-	public void processReceive() {
-		// Process the received datagram.
-		System.out.println("Elevator: Packet received:");
-		System.out.println("From host: " + receivePacket.getAddress());
-		System.out.println("Host port: " + receivePacket.getPort());
-		int len = receivePacket.getLength();
-		System.out.println("Length: " + len);
-		System.out.print("Containing: " + scheDat.getStatus() + "\n");
+	
+	/**
+	 * Set the flag for opening the elevator doors
+	 */
+	public void openDoor() {
+		doorOpen = true;
 	}
-
-	public void wait5s() {
-		// Slow things down (wait 5 seconds)
+	
+	/**
+	 * Set the flag for closing the elevator doors
+	 */
+	public void closeDoor() {
+		doorOpen = false;
+	}
+	
+	/**
+	 * Simulate waiting time for elevator actions
+	 * @param ms the time to wait, in milliseconds
+	 */
+	public void simulateWait(int ms) {
 		try {
-			Thread.sleep(8000);
+			Thread.sleep(ms);
 		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
-			System.exit(1);
 		}
 	}
 	
-	public ElevatorData getElevatorData() {
-		return elevDat;
-	}
-	
-	public SchedulerData getSchedulerData() {
-		return scheDat;
+	/**
+	 * Print a status message in the console
+	 * @param message the message to be printed
+	 */
+	public void print(String message) {
+		System.out.println(message);
 	}
 
-	public static void main(String args[]) {
-		Elevator c = new Elevator();
-		c.receiveAndReply();
-	}
 }

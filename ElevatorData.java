@@ -7,18 +7,20 @@ import java.util.ArrayList;
  *
  */
 public class ElevatorData implements Serializable {
-	private final int currFloor; //the elevator's current floor
-	private ArrayList<Integer> destFloor; //the floor destinations
-	private boolean movingUp; //true if elevator is moving up, false otherwise
+	private final int elevatorNum;
+	private final int currFloor; //the elevatorSubsystem's current floorSubsystem
+	private ArrayList<Integer> destFloor; //the floorSubsystem destinations
+	private boolean movingUp; //true if elevatorSubsystem is moving up, false otherwise
 	private String status;
 	
 	/**
-	 * 
-	 * @param currFloor the floor the elevator is currently on
-	 * @param destFloor the floor destinations
-	 * @param movingUp true if the elevator is moving up, false otherwise
+	 * @param elevatorNum the designated elevator
+	 * @param currFloor the floorSubsystem the elevatorSubsystem is currently on
+	 * @param destFloor the floorSubsystem destinations
+	 * @param movingUp true if the elevatorSubsystem is moving up, false otherwise
 	 */
-	public ElevatorData(int currFloor, ArrayList<Integer> destFloor, boolean movingUp) {
+	public ElevatorData(int elevatorNum, int currFloor, ArrayList<Integer> destFloor, boolean movingUp) {
+		this.elevatorNum = elevatorNum;
 		this.currFloor = currFloor;
 		this.destFloor = destFloor;
 		this.movingUp = movingUp;
@@ -27,24 +29,24 @@ public class ElevatorData implements Serializable {
 	/**
 	
 	/**
-	 * Returns the elevator's current floor
-	 * @return the elevator's current floor
+	 * Returns the elevatorSubsystem's current floorSubsystem
+	 * @return the elevatorSubsystem's current floorSubsystem
 	 */
 	public int getCurrentFloor() {
 		return currFloor;
 	}
 	
 	/**
-	 * Returns the list of floor destinations
-	 * @return the floor destinations
+	 * Returns the list of floorSubsystem destinations
+	 * @return the floorSubsystem destinations
 	 */
 	public ArrayList<Integer> getDestinationFloor() {
 		return destFloor;
 	}
 	
 	/**
-	 * Returns true if the elevator is moving up, false otherwise
-	 * @return true if the elevator is moving up, false otherwise
+	 * Returns true if the elevatorSubsystem is moving up, false otherwise
+	 * @return true if the elevatorSubsystem is moving up, false otherwise
 	 */
 	public boolean isMovingUp() {
 		if (movingUp)
@@ -53,8 +55,8 @@ public class ElevatorData implements Serializable {
 	}
 	
 	/**
-	 * Returns true if the elevator is moving down, false otherwise
-	 * @return true if the elevator is moving up, false otherwise
+	 * Returns true if the elevatorSubsystem is moving down, false otherwise
+	 * @return true if the elevatorSubsystem is moving up, false otherwise
 	 */
 	public boolean isMovingDown() {
 		if (!movingUp)
@@ -63,19 +65,27 @@ public class ElevatorData implements Serializable {
 	}
 	
 	/**
-	 * Sets the elevator's status
-	 * @param status the status of the elevator
+	 * Sets the elevatorSubsystem's status
+	 * @param status the status of the elevatorSubsystem
 	 */
 	public void setStatus(String status) {
 		this.status = status;
 	}
 	
 	/**
-	 * Returns the status of the elevator
-	 * @return the status of the elevator
+	 * Returns the status of the elevatorSubsystem
+	 * @return the status of the elevatorSubsystem
 	 */
 	public String getStatus() {
 		return status;
+	}
+	
+	/**
+	 * Returns the elevator number this data to which this data is designated
+	 * @return the elevator number corresponding to this data
+	 */
+	public int getElevatorNumber() {
+		return elevatorNum;
 	}
 
 }

@@ -6,18 +6,18 @@ import org.junit.jupiter.api.Test;
 
 /**
  * 
- * Test Case for validating that floor data is properly sent from the floor to
+ * Test Case for validating that floorSubsystem data is properly sent from the floorSubsystem to
  * the scheduler
  *
  */
 class FloorTest {
 
-	Floor floor;
+	FloorSubsystem floorSubsystem;
 	Scheduler scheduler;
 
 	@BeforeEach
 	void setUp() throws Exception {
-		floor = new Floor(); // Create a new floor
+		floorSubsystem = new FloorSubsystem(5); // Create a new floorSubsystem with 5 floors
 		scheduler = new Scheduler(5); // Create a new scheduler for a system with 5 floors
 	}
 
@@ -27,11 +27,11 @@ class FloorTest {
 
 	@Test
 	void floorDataTest() {
-		// Initiate the interaction between the floor sending data to the scheduler
-		floor.send();
+		// Initiate the interaction between the floorSubsystem sending data to the scheduler
+		floorSubsystem.send();
 		scheduler.floorReceive();
 
-		assertEquals(floor.getFloorData().getStatus(), scheduler.getFloorData().getStatus());
-		assertEquals(floor.getFloorData().getFloorNum(), scheduler.getFloorData().getFloorNum());
+		assertEquals(floorSubsystem.getFloorData().getStatus(), scheduler.getFloorData().getStatus());
+		assertEquals(floorSubsystem.getFloorData().getFloorNum(), scheduler.getFloorData().getFloorNum());
 	}
 }

@@ -60,7 +60,7 @@ public class Scheduler {
 		
 		try {
 			scheDat = new SchedulerData(floorLamps, destFloors);
-			scheDat.setStatus("Scheduler received reply from Elevator. Elevator is arriving shortly.");
+			scheDat.setStatus("Scheduler received reply from ElevatorSubsystem. ElevatorSubsystem is arriving shortly.");
 			
 			//Convert the FloorData object into a byte array
 			ByteArrayOutputStream baoStream = new ByteArrayOutputStream();
@@ -87,7 +87,7 @@ public class Scheduler {
 		}
 
 		processFloorSend();
-		System.out.println("Scheduler: Packet sent to floor.\n");
+		System.out.println("Scheduler: Packet sent to floorSubsystem.\n");
 
 	}
 
@@ -129,14 +129,14 @@ public class Scheduler {
 		}
 
 		processFloorReceived();
-		System.out.println("Scheduler: Packet received from floor.\n");
+		System.out.println("Scheduler: Packet received from floorSubsystem.\n");
 	}
 
 	public void elevatorSend() {
 	
 		try {
 			scheDat = new SchedulerData(floorLamps, destFloors);
-			scheDat.setStatus("Scheduler received the floor request. Relaying request to elevator.");
+			scheDat.setStatus("Scheduler received the floorSubsystem request. Relaying request to elevatorSubsystem.");
 			
 			//Convert the FloorData object into a byte array
 			ByteArrayOutputStream baoStream = new ByteArrayOutputStream();
@@ -147,7 +147,7 @@ public class Scheduler {
 			ooStream.flush();
 			byte msg[] = baoStream.toByteArray();
 		
-			elevatorSendPacket = new DatagramPacket(msg, msg.length, floorReceivePacket.getAddress(), 2000);// elevator server
+			elevatorSendPacket = new DatagramPacket(msg, msg.length, floorReceivePacket.getAddress(), 2000);// elevatorSubsystem server
 			// port
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
@@ -163,7 +163,7 @@ public class Scheduler {
 
 		processElevatorSend();
 
-		System.out.println("Scheduler: Packet sent to elevator.");
+		System.out.println("Scheduler: Packet sent to elevatorSubsystem.");
 	}
 
 	public void elevatorReceive() {
@@ -205,7 +205,7 @@ public class Scheduler {
     	
 		processElevatorReceived();
 
-		System.out.println("Scheduler: Packet received from elevator.");
+		System.out.println("Scheduler: Packet received from elevatorSubsystem.");
 	}
 
 	public void processFloorReceived() {
@@ -227,7 +227,7 @@ public class Scheduler {
 	}
 
 	public void processElevatorSend() {
-		System.out.println("Scheduler: Sending packet to elevator.");
+		System.out.println("Scheduler: Sending packet to elevatorSubsystem.");
 		System.out.println("To host: " + elevatorSendPacket.getAddress());
 		System.out.println("Destination host port: " + 2000);
 		int len = elevatorSendPacket.getLength();
@@ -237,7 +237,7 @@ public class Scheduler {
 	}
 
 	public void processFloorSend() {
-		System.out.println("Scheduler: Sending packet to floor.");
+		System.out.println("Scheduler: Sending packet to floorSubsystem.");
 		System.out.println("To host: " + floorSendPacket.getAddress());
 		System.out.println("Destination host port: " + floorSendPacket.getPort());
 		int len = floorSendPacket.getLength();

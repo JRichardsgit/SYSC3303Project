@@ -6,20 +6,20 @@ import org.junit.jupiter.api.Test;
 
 /**
  * 
- * Test Case for validating that Elevator data is properly sent from the elevator to the scheduler
+ * Test Case for validating that ElevatorSubsystem data is properly sent from the elevatorSubsystem to the scheduler
  *
  */
 public class ElevatorTest {
 	
 	private Scheduler scheduler;
-	private Floor floor;
-	private Elevator elevator;
+	private FloorSubsystem floorSubsystem;
+	private ElevatorSubsystem elevatorSubsystem;
 
 	@BeforeEach
 	void setUp() throws Exception {
 		scheduler = new Scheduler(5);
-		floor = new Floor();
-		elevator = new Elevator();
+		floorSubsystem = new FloorSubsystem(5);
+		elevatorSubsystem = new ElevatorSubsystem();
 	}
 
 	@AfterEach
@@ -28,18 +28,18 @@ public class ElevatorTest {
 
 	@Test
 	void ElevatorDataTest() {
-		//Initiate the floor request to the scheduler and the scheduler request to the elevator
-		floor.send();
+		//Initiate the floorSubsystem request to the scheduler and the scheduler request to the elevatorSubsystem
+		floorSubsystem.send();
 		scheduler.floorReceive();
 		scheduler.elevatorSend();
-		elevator.receive();
+		elevatorSubsystem.receive();
 		
-		//Initiate the elevator response to the scheduler 
-		elevator.send();
+		//Initiate the elevatorSubsystem response to the scheduler 
+		elevatorSubsystem.send();
 		scheduler.elevatorReceive();
 		
-		//Verify that the elevator data is the same
-		assertEquals(elevator.getElevatorData().getStatus(), scheduler.getElevatorData().getStatus());
+		//Verify that the elevatorSubsystem data is the same
+		assertEquals(elevatorSubsystem.getElevatorData().getStatus(), scheduler.getElevatorData().getStatus());
 		
 	}
 }

@@ -6,14 +6,14 @@ import java.io.Serializable;
  *
  */
 public class SchedulerData implements Serializable {
-	private boolean floorLamps[]; //true if an elevator is on that floor, false if none; array of floor lamp states
+	private boolean floorLamps[]; //true if an elevatorSubsystem is on that floorSubsystem, false if none; array of floorSubsystem lamp states
 	private int destFloors[]; //array of destination floors
 	private String status;
 	
 	/**
 	 * Creates an new SchedulerData Object
 	 * @param floorLamps the array of floorLamps
-	 * @param floor the floor destinations to send the elevator
+	 * @param floorSubsystem the floorSubsystem destinations to send the elevatorSubsystem
 	 */
 	public SchedulerData(boolean floorLamps[], int destFloors[]) {
 		this.floorLamps = floorLamps;
@@ -29,8 +29,8 @@ public class SchedulerData implements Serializable {
 	}
 	
 	/**
-	 * Returns the array of floor lamp states
-	 * @return the array of floor lamp states
+	 * Returns the array of floorSubsystem lamp states
+	 * @return the array of floorSubsystem lamp states
 	 */
 	public boolean[] getFloorLamps() {
 		return floorLamps;

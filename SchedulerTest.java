@@ -7,20 +7,20 @@ import org.junit.jupiter.api.Test;
 /**
  * 
  * Test Case for validating that scheduler data is properly sent from the
- * scheduler to the floor and to the elevator
+ * scheduler to the floorSubsystem and to the elevatorSubsystem
  *
  */
 class SchedulerTest {
 
 	Scheduler scheduler;
-	Floor floor;
-	Elevator elevator;
+	FloorSubsystem floorSubsystem;
+	ElevatorSubsystem elevatorSubsystem;
 
 	@BeforeEach
 	void setUp() throws Exception {
 		scheduler = new Scheduler(5);
-		floor = new Floor();
-		elevator = new Elevator();
+		floorSubsystem = new FloorSubsystem(5);
+		elevatorSubsystem = new ElevatorSubsystem();
 	}
 
 	@AfterEach
@@ -31,21 +31,21 @@ class SchedulerTest {
 	void schedulerDataTest() {
 		// Assert that the datapackets sent were the same ones received
 
-		// Initiate the scheduler to send data to the elevator and floor
+		// Initiate the scheduler to send data to the elevatorSubsystem and floorSubsystem
 
-		// Check the data exchange between elevator and scheduler and verify that the
+		// Check the data exchange between elevatorSubsystem and scheduler and verify that the
 		// data is the same
-		floor.send();
+		floorSubsystem.send();
 		scheduler.floorReceive();
 		scheduler.elevatorSend();
-		elevator.receive();
-		assertEquals(scheduler.getSchedulerData().getStatus(), elevator.getSchedulerData().getStatus());
+		elevatorSubsystem.receive();
+		assertEquals(scheduler.getSchedulerData().getStatus(), elevatorSubsystem.getSchedulerData().getStatus());
 
-		// Check the exchange between the scheduler and floor and verify that the data
+		// Check the exchange between the scheduler and floorSubsystem and verify that the data
 		// is the same
 		scheduler.floorSend();
-		floor.receive();
-		assertEquals(scheduler.getSchedulerData().getStatus(), floor.getSchedulerData().getStatus());
+		floorSubsystem.receive();
+		assertEquals(scheduler.getSchedulerData().getStatus(), floorSubsystem.getSchedulerData().getStatus());
 
 	}
 
