@@ -329,6 +329,47 @@ public class Scheduler {
 	public void routeElevator() {
 		/**
 		 * LOGIC for scheduling goes HERE
+		 
+		case1: //There is already an elevator on the floor that the req came from
+		
+		if(floorDat.getFloorNum() == E1.elevDat.getCurrentFloor()){ // elevator 1 is on floor that req came from
+			scheDat = new SchedulerData(E1.elevDat.getElevNum(), floorLamps, reqFloors);
+			}
+		elseif(floorDat.getFloorNum() == E2.elevDat.getCurrentFloor()){ // elevator 2 is on floor that req came from
+			scheDat = new SchedulerData(E2.elevDat.getElevNum(), floorLamps, reqFloors);
+			}
+		endcase
+		
+		
+		case2: //All elevators are above req floor
+		
+		if(floorDat.getFloorNum() < E1.elevDat.getCurrentFloor() & E1.elevDat.isMovingDown()){ //if E1 is above req floor and already moving down
+			scheDat = new SchedulerData(E1.elevDat.getElevNum(), floorLamps, floorDat.getFloorNum()); // send E1 to req floor
+			}
+		elseif(floorDat.getFloorNum() < E2.elevDat.getCurrentFloor() & E2.elevDat.isMovingDown()){
+			scheDat = new SchedulerData(E2.elevDat.getElevNum(), floorLamps, floorDat.getFloorNum());
+			}
+		
+		else
+			send closest idle elevator
+			
+		endcase
+		
+		
+		case3: //All elevators are below req floor
+		
+		if(floorDat.getFloorNum() > E1.elevDat.getCurrentFloor() & E1.elevDat.isMovingUp()){ //if E1 is below req floor and already moving up
+			scheDat = new SchedulerData(E1.elevDat.getElevNum(), floorLamps, floorDat.getFloorNum()); // send E1 to req floor
+			}
+		elseif(floorDat.getFloorNum() > E2.elevDat.getCurrentFloor() & E2.elevDat.isMovingUp()){
+			scheDat = new SchedulerData(E2.elevDat.getElevNum(), floorLamps, floorDat.getFloorNum());
+			}
+		
+		else
+			send closest idle elevator
+			
+		endcase
+			
 		 */
 		//Hard coded to send to elevator 1 -- for testing purposes
 		scheDat = new SchedulerData(1, floorLamps, reqFloors);
