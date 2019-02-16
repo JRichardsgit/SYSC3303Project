@@ -39,7 +39,7 @@ public class Elevator extends Thread {
 		movingDown = false;
 		doorOpen = false;
 		reqFloors = new ArrayList<Integer>();
-		currFloor = 0;
+		currFloor = 1;
 	}
 	
 	/**
@@ -88,12 +88,7 @@ public class Elevator extends Thread {
 		print("Arrived at floor " + floorNum + ".");
 		reqFloors.remove((Integer) floorNum);
 		
-		print("Opening doors.");
-		simulateWait(2000);
 		openDoor();
-		
-		print("Closing doors.");
-		simulateWait(2000);
 		closeDoor();
 	}
 	
@@ -112,6 +107,8 @@ public class Elevator extends Thread {
 	 */
 	public void openDoor() {
 		doorOpen = true;
+		print("Opening doors.");
+		simulateWait(2000);
 	}
 	
 	/**
@@ -119,6 +116,8 @@ public class Elevator extends Thread {
 	 */
 	public void closeDoor() {
 		doorOpen = false;
+		print("Closing doors.");
+		simulateWait(2000);
 	}
 	
 	/**

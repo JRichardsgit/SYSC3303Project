@@ -20,6 +20,9 @@ public class Scheduler {
 
 	//Total number of floors
 	private final int numFloors;
+	
+	//Elevator Data List
+	private ElevatorData elevDataList[];
 
 	//Data Structures for relaying Data
 	private SchedulerData scheDat;
@@ -30,7 +33,7 @@ public class Scheduler {
 	 * Create a new Scheduler with the corresponding number of floors
 	 * @param numFloors
 	 */
-	public Scheduler(int numFloors) {
+	public Scheduler(int numFloors, int numElevators) {
 		try {
 			// Construct a datagram socket and bind it to any available
 			// port on the local host machine. This socket will be used to
@@ -58,6 +61,8 @@ public class Scheduler {
 		floorLamps = new boolean[numFloors];
 		arrivalSensors = new boolean[numFloors];
 		reqFloors = new ArrayList<Integer>();
+		
+		elevDataList = new ElevatorData[numElevators];
 
 	}
 
@@ -261,6 +266,8 @@ public class Scheduler {
 		print("Host port: " + elevatorReceivePacket.getPort());
 		print("Packet length: " + elevatorReceivePacket.getLength());
 		print("Containing: \n" + elevDat.getStatus() + "\n");
+		
+		elevDataList[elevDat.getElevatorNumber()] = elevDat;
 	}
 
 	/**
@@ -361,7 +368,7 @@ public class Scheduler {
 	}
 
 	public static void main(String args[]) {
-		Scheduler c = new Scheduler(5);
+		Scheduler c = new Scheduler(5, 2);
 
 		/**
 		 * Scheduler Logic
