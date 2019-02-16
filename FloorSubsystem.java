@@ -214,19 +214,15 @@ public class FloorSubsystem {
 		 * For now, hard code simulation data.
 		 */
 		
-		//Request to go up from floor 1, 2, 3
+		//Request to go up from floor 1, should send elevator 
 		c.getFloor(1).pressUp();
 		c.send(c.getFloor(1).getFloorData());
 		
+		c.getFloor(4).pressUp();
+		c.send(c.getFloor(4).getFloorData());
+		
 		c.getFloor(2).pressUp();
 		c.send(c.getFloor(2).getFloorData());
-		
-		c.getFloor(3).pressUp();
-		c.send(c.getFloor(3).getFloorData());
-		
-		//Request to go down from floor 5
-		c.getFloor(5).pressUp();
-		c.send(c.getFloor(5).getFloorData());
 
 		c.closeSocket();
 	}

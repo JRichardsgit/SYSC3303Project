@@ -18,7 +18,7 @@ class FloorTest {
 	@BeforeEach
 	void setUp() throws Exception {
 		floorSubsystem = new FloorSubsystem(5); // Create a new floorSubsystem with 5 floors
-		scheduler = new Scheduler(5); // Create a new scheduler for a system with 5 floors
+		scheduler = new Scheduler(5, 2); // Create a new scheduler for a system with 5 floors
 	}
 
 	@AfterEach

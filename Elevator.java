@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Random;
 
 /**
  * Elevator Node Implementation
@@ -11,6 +12,9 @@ public class Elevator extends Thread {
 	
 	//Elevator Number
 	private final int elevatorNum; 
+	
+	//Number of floors
+	private final int numFloors;
 	
 	//Movement flags
 	private boolean movingUp;
@@ -31,8 +35,9 @@ public class Elevator extends Thread {
 	 * @param elevatorNum this elevator's number
 	 * @param eSystem reference to the elevator subsystem
 	 */
-	public Elevator(int elevatorNum, ElevatorSubsystem eSystem) {
+	public Elevator(int elevatorNum, int numFloors, ElevatorSubsystem eSystem) {
 		this.elevatorNum = elevatorNum;
+		this.numFloors = numFloors;
 		this.eSystem = eSystem;
 		status = "Idle";
 		movingUp = false;
@@ -40,6 +45,10 @@ public class Elevator extends Thread {
 		doorOpen = false;
 		reqFloors = new ArrayList<Integer>();
 		currFloor = 1;
+	}
+	
+	public void run() {
+		
 	}
 	
 	/**
@@ -71,11 +80,12 @@ public class Elevator extends Thread {
 	 * @param floorNum requested floor
 	 */
 	public void moveToFloor(int floorNum) {
-		print("Elevator " + elevatorNum + " currently on floor " + currFloor + " .");
-		print("Elevator " + elevatorNum + " moving to floor" + currFloor + " .");
+		print("Elevator " + elevatorNum + " currently on floor " + currFloor + ".");
+		print("Elevator " + elevatorNum + " moving to floor " + floorNum + ".");
 		
 		if (floorNum > currFloor) {
 			moveUp();
+			simulateWait(Math.abs(floorNum - currFloor) * 3000);
 		}
 		else if (floorNum < currFloor) {
 			moveDown();
@@ -84,12 +94,25 @@ public class Elevator extends Thread {
 		else {
 			//Do nothing, elevator is already on the floor
 		}
+		
+		currFloor = floorNum;
 			
-		print("Arrived at floor " + floorNum + ".");
-		reqFloors.remove((Integer) floorNum);
+		print("Arrived at floor " + floorNum + ".\n");
 		
 		openDoor();
 		closeDoor();
+	}
+	
+	/**
+	 * Visit all the requested floors
+	 */
+	public void visitFloors() {
+		for (Integer i: reqFloors) {
+			moveToFloor(i);
+		}
+		reqFloors.clear();
+		
+		moveStop();
 	}
 	
 	/**
@@ -100,6 +123,7 @@ public class Elevator extends Thread {
 		//Only add requested floor if not already requested
 		if (!reqFloors.contains((Integer) floorNum))
 			reqFloors.add(floorNum);
+		Collections.sort(reqFloors);
 	}
 	
 	/**
@@ -116,17 +140,28 @@ public class Elevator extends Thread {
 	 */
 	public void closeDoor() {
 		doorOpen = false;
-		print("Closing doors.");
+		print("Closing doors.\n");
 		simulateWait(2000);
 	}
 	
 	/**
-	 * Update floor requests with the received request from the scheduler
+	 * Update floor requests with the received request from the scheduler and random requests 
+	 * from the elevator user
 	 */
 	public void receiveRequest(ArrayList<Integer> receivedRequests) {
 		reqFloors.removeAll(receivedRequests);
 		reqFloors.addAll(receivedRequests);
 		Collections.sort(reqFloors);
+		
+		eSystem.send(getElevatorData());
+		
+		Random randomFloor = new Random();
+		
+		//Elevator User floor selection to be further implemented
+		//chooseFloor(randomFloor.nextInt(numFloors + 1));
+		
+		visitFloors();
+		
 		
 		eSystem.send(getElevatorData());
 	}

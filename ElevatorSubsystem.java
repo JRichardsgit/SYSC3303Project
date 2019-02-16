@@ -24,7 +24,7 @@ public class ElevatorSubsystem {
 	 * Create a new elevator subsystem with numElevators
 	 * @param numElevators the number of elevators in the system
 	 */
-	public ElevatorSubsystem(int numElevators) {
+	public ElevatorSubsystem( int numFloors, int numElevators) {
 		try {
 			// Construct a datagram socket and bind it to any available
 			// port on the local host machine. This socket will be used to
@@ -46,7 +46,7 @@ public class ElevatorSubsystem {
 		elevatorList = new Elevator[numElevators];
 		
 		for (int i = 0; i < numElevators; i ++) {
-			elevatorList[i] = (new Elevator(i, this));
+			elevatorList[i] = (new Elevator(i, numFloors, this));
 		}
 	}
 
@@ -212,7 +212,7 @@ public class ElevatorSubsystem {
 	}
 
 	public static void main(String args[]) {
-		ElevatorSubsystem c = new ElevatorSubsystem(2);
+		ElevatorSubsystem c = new ElevatorSubsystem(5, 2);
 		
 		/**
 		 * Elevator subsystem logic

@@ -18,9 +18,9 @@ class SchedulerTest {
 
 	@BeforeEach
 	void setUp() throws Exception {
-		scheduler = new Scheduler(5);
+		scheduler = new Scheduler(5, 2);
 		floorSubsystem = new FloorSubsystem(5);
-		elevatorSubsystem = new ElevatorSubsystem(2);
+		elevatorSubsystem = new ElevatorSubsystem(5, 2);
 	}
 
 	@AfterEach
