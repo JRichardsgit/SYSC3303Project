@@ -341,7 +341,7 @@ public class Scheduler {
 		endcase
 		
 		
-		case2: //All elevators are above req floor
+		case2: //there are elevator(s) above req floor. Floor req down
 		
 		if(floorDat.getFloorNum() < E1.elevDat.getCurrentFloor() & E1.elevDat.isMovingDown()){ //if E1 is above req floor and already moving down
 			scheDat = new SchedulerData(E1.elevDat.getElevNum(), floorLamps, floorDat.getFloorNum()); // send E1 to req floor
@@ -356,7 +356,7 @@ public class Scheduler {
 		endcase
 		
 		
-		case3: //All elevators are below req floor
+		case3: //there are elevator(s) below req floor. Floor req up
 		
 		if(floorDat.getFloorNum() > E1.elevDat.getCurrentFloor() & E1.elevDat.isMovingUp()){ //if E1 is below req floor and already moving up
 			scheDat = new SchedulerData(E1.elevDat.getElevNum(), floorLamps, floorDat.getFloorNum()); // send E1 to req floor
@@ -369,7 +369,13 @@ public class Scheduler {
 			send closest idle elevator
 			
 		endcase
-			
+		
+		Case 4: No elevators are already on the path to floor req (ie elevators above are moving up & elevators below are moving dowm)
+			wait for & send first elevator to become idle (ie no next destinatios) 
+			or 
+			send first elevator that switched directions (ie is now on the path to req floor)
+		Case 5:
+		Case 6:
 		 */
 		//Hard coded to send to elevator 1 -- for testing purposes
 		scheDat = new SchedulerData(1, floorLamps, reqFloors);
