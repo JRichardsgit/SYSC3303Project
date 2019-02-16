@@ -9,15 +9,22 @@ import java.util.ArrayList;
 
 public class ElevatorSubsystem {
 
+	//Sockets and Packets
 	DatagramPacket sendPacket, receivePacket;
 	DatagramSocket sendSocket, receiveSocket;
 
+	//Data Structures for relaying data
 	private ElevatorData elevDat;
 	private SchedulerData scheDat;
 	
-	private ArrayList<Elevator> elevatorList;
+	//List of elevators
+	private Elevator elevatorList[];
 
-	public ElevatorSubsystem() {
+	/**
+	 * Create a new elevator subsystem with numElevators
+	 * @param numElevators the number of elevators in the system
+	 */
+	public ElevatorSubsystem(int numElevators) {
 		try {
 			// Construct a datagram socket and bind it to any available
 			// port on the local host machine. This socket will be used to
@@ -36,9 +43,14 @@ public class ElevatorSubsystem {
 			System.exit(1);
 		}
 		
-		elevatorList = new ArrayList<Elevator>();
+		elevatorList = new Elevator[numElevators];
+		
+		for (int i = 0; i < numElevators; i ++) {
+			elevatorList[i] = (new Elevator(i, this));
+		}
 	}
 
+	/**
 	public void receiveAndReply() {
 		receive();
 		wait5s();
@@ -47,12 +59,16 @@ public class ElevatorSubsystem {
 		sendSocket.close();
 		receiveSocket.close();
 	}
+	*/
 
-	public void send() {
-
+	/**
+	 * Send a packet to the scheduler
+	 */
+	public void send(ElevatorData elevDat) {
+		
+		this.elevDat = elevDat;
 		try {
-			elevDat.setStatus("ElevatorSubsystem received request. Heading to destination floorSubsystem.");
-			// Convert the FloorData object into a byte array
+			// Convert the ElevatorData object into a byte array
 			ByteArrayOutputStream baoStream = new ByteArrayOutputStream();
 			ObjectOutputStream ooStream = new ObjectOutputStream(new BufferedOutputStream(baoStream));
 			ooStream.flush();
@@ -77,25 +93,28 @@ public class ElevatorSubsystem {
 			System.exit(1);
 		}
 
-		System.out.println("ElevatorSubsystem: Packet sent to scheduler.\n");
+		print("ElevatorSubsystem: Packet sent to scheduler.\n");
 
 	}
 
+	/**
+	 * Receive a packet from the scheduler
+	 */
 	public void receive() {
 		// Construct a DatagramPacket for receiving packets up
-		// to 100 bytes long (the length of the byte array).
+		// to 5000 bytes long (the length of the byte array).
 
 		byte data[] = new byte[5000];
 		receivePacket = new DatagramPacket(data, data.length);
-		System.out.println("ElevatorSubsystem: Waiting for Packet.\n");
+		print("ElevatorSubsystem: Waiting for Packet.\n");
 
 		// Block until a datagram packet is received from receiveSocket.
 		try {
-			System.out.println("Waiting..."); // so we know we're waiting
+			print("Waiting..."); // so we know we're waiting
 			receiveSocket.receive(receivePacket);
 		} catch (IOException e) {
-			System.out.print("IO Exception: likely:");
-			System.out.println("Receive Socket Timed Out.\n" + e);
+			print("IO Exception: likely:");
+			print("Receive Socket Timed Out.\n" + e);
 			e.printStackTrace();
 			System.exit(1);
 		}
@@ -119,26 +138,30 @@ public class ElevatorSubsystem {
 
 		processReceive();
 		
-		System.out.println("ElevatorSubsystem: Packet received from scheduler.\n");
+		print("ElevatorSubsystem: Packet received from scheduler.\n");
 	}
 
+	/**
+	 * Process the sent packet
+	 */
 	public void processSend() {
-		System.out.println("ElevatorSubsystem: Sending packet:");
-		System.out.println("To host: elevatorSubsystem system");
-		System.out.println("Destination host port: " + sendPacket.getPort());
-		int len = sendPacket.getLength();
-		System.out.println("Length: " + len);
-		System.out.print("Containing: " + elevDat.getStatus() + "\n");
+		print("ElevatorSubsystem: Sending packet:");
+		print("To host: Scheduler");
+		print("Destination host port: " + sendPacket.getPort());
+		print("Length: " + sendPacket.getLength());
+		print("Containing: \n" + elevDat.getStatus() + "\n");
 	}
 
+	/**
+	 * Process the received packet
+	 */
 	public void processReceive() {
 		// Process the received datagram.
-		System.out.println("ElevatorSubsystem: Packet received:");
-		System.out.println("From host: " + receivePacket.getAddress());
-		System.out.println("Host port: " + receivePacket.getPort());
-		int len = receivePacket.getLength();
-		System.out.println("Length: " + len);
-		System.out.print("Containing: " + scheDat.getStatus() + "\n");
+		print("ElevatorSubsystem: Packet received:");
+		print("From host: " + receivePacket.getAddress());
+		print("Host port: " + receivePacket.getPort());
+		print("Length: " + receivePacket.getLength());
+		print("Containing: \n" + scheDat.getStatus() + "\n");
 	}
 
 	public void wait5s() {
@@ -151,28 +174,54 @@ public class ElevatorSubsystem {
 		}
 	}
 	
+	/**
+	 * Returns the last sent elevator packet
+	 * @return the last sent elevator packet
+	 */
 	public ElevatorData getElevatorData() {
 		return elevDat;
 	}
 	
+	/**
+	 * Returns the last received scheduler packet
+	 * @return the last received scheduler packet
+	 */
 	public SchedulerData getSchedulerData() {
 		return scheDat;
 	}
 	
-	public void addElevator(int elevatorNum) {
-		elevatorList.add(new Elevator(elevatorNum, this));
+	/**
+	 * Returns the elevator with the corresponding elevator number
+	 * @param elevatorNum the elevator number
+	 * @return corresponding elevator
+	 */
+	public Elevator getElevator(int elevatorNum) {
+		return elevatorList[elevatorNum];
 	}
 	
-	public Elevator getElevator(int elevatorNum) {
-		return elevatorList.get(elevatorNum - 1);
+	public void routePacket() {
+		getElevator(scheDat.getElevatorNumber()).receiveRequest(scheDat.getReqFloors());
+	}
+	
+	/**
+	 * Print a status message in the console
+	 * @param message the message to be printed
+	 */
+	public void print(String message) {
+		System.out.println(message);
 	}
 
 	public static void main(String args[]) {
-		ElevatorSubsystem c = new ElevatorSubsystem();
+		ElevatorSubsystem c = new ElevatorSubsystem(2);
 		
-		c.addElevator(1);
-		c.addElevator(2);
-	
-		c.receiveAndReply();
+		/**
+		 * Elevator subsystem logic
+		 */
+		
+		while(true) {
+			c.receive();
+			c.routePacket();
+		}
+
 	}
 }

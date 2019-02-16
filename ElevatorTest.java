@@ -19,7 +19,7 @@ public class ElevatorTest {
 	void setUp() throws Exception {
 		scheduler = new Scheduler(5);
 		floorSubsystem = new FloorSubsystem(5);
-		elevatorSubsystem = new ElevatorSubsystem();
+		elevatorSubsystem = new ElevatorSubsystem(2);
 	}
 
 	@AfterEach
@@ -29,13 +29,13 @@ public class ElevatorTest {
 	@Test
 	void ElevatorDataTest() {
 		//Initiate the floorSubsystem request to the scheduler and the scheduler request to the elevatorSubsystem
-		floorSubsystem.send();
+		//floorSubsystem.send();
 		scheduler.floorReceive();
-		scheduler.elevatorSend();
+		//scheduler.elevatorSend();
 		elevatorSubsystem.receive();
 		
 		//Initiate the elevatorSubsystem response to the scheduler 
-		elevatorSubsystem.send();
+		//elevatorSubsystem.send();
 		scheduler.elevatorReceive();
 		
 		//Verify that the elevatorSubsystem data is the same

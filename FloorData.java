@@ -17,6 +17,11 @@ public class FloorData implements Serializable {
 	public FloorData(int floorNum, boolean upPressed) {
 		this.floorNum = floorNum;
 		this.upPressed = upPressed;
+		
+		if (upPressed)
+			status = "Floor " + floorNum + ": request to go up.";
+		else
+			status = "Floor " + floorNum + ": request to go down.";
 	}
 	
 	/**

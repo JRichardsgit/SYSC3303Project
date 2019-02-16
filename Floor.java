@@ -61,5 +61,19 @@ public class Floor {
 	public void setLamps(ArrayList<Integer> floorLamps) {
 		this.floorLamps = floorLamps;
 	}
+	
+	/**
+	 * Returns the floor data of this floor for sending
+	 * @return FloorData of this floor
+	 */
+	public FloorData getFloorData() {
+		//If up was pressed
+		if (upPressed)
+			return new FloorData(floorNum, true);
+		
+		//If down was pressed
+		return new FloorData(floorNum, false);
+					
+	}
 
 }

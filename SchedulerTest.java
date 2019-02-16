@@ -20,7 +20,7 @@ class SchedulerTest {
 	void setUp() throws Exception {
 		scheduler = new Scheduler(5);
 		floorSubsystem = new FloorSubsystem(5);
-		elevatorSubsystem = new ElevatorSubsystem();
+		elevatorSubsystem = new ElevatorSubsystem(2);
 	}
 
 	@AfterEach
@@ -35,15 +35,15 @@ class SchedulerTest {
 
 		// Check the data exchange between elevatorSubsystem and scheduler and verify that the
 		// data is the same
-		floorSubsystem.send();
+		//floorSubsystem.send();
 		scheduler.floorReceive();
-		scheduler.elevatorSend();
+		//scheduler.elevatorSend();
 		elevatorSubsystem.receive();
 		assertEquals(scheduler.getSchedulerData().getStatus(), elevatorSubsystem.getSchedulerData().getStatus());
 
 		// Check the exchange between the scheduler and floorSubsystem and verify that the data
 		// is the same
-		scheduler.floorSend();
+		//scheduler.floorSend();
 		floorSubsystem.receive();
 		assertEquals(scheduler.getSchedulerData().getStatus(), floorSubsystem.getSchedulerData().getStatus());
 

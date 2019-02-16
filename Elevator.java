@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * Elevator Node Implementation
@@ -118,6 +119,25 @@ public class Elevator extends Thread {
 	 */
 	public void closeDoor() {
 		doorOpen = false;
+	}
+	
+	/**
+	 * Update floor requests with the received request from the scheduler
+	 */
+	public void receiveRequest(ArrayList<Integer> receivedRequests) {
+		reqFloors.removeAll(receivedRequests);
+		reqFloors.addAll(receivedRequests);
+		Collections.sort(reqFloors);
+		
+		eSystem.send(getElevatorData());
+	}
+	
+	/**
+	 * Return this elevator's data
+	 * @return this elevator's data
+	 */
+	public ElevatorData getElevatorData() {
+		return new ElevatorData(elevatorNum, currFloor, reqFloors, movingUp, movingDown);
 	}
 	
 	/**

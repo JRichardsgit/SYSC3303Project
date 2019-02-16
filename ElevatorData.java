@@ -7,23 +7,34 @@ import java.util.ArrayList;
  *
  */
 public class ElevatorData implements Serializable {
-	private final int elevatorNum;
-	private final int currFloor; //the elevatorSubsystem's current floorSubsystem
-	private ArrayList<Integer> destFloor; //the floorSubsystem destinations
-	private boolean movingUp; //true if elevatorSubsystem is moving up, false otherwise
-	private String status;
+	private final int elevatorNum; //the elevator number
+	private final int currFloor; //the elevator's current floor
+	private ArrayList<Integer> reqFloor; //the requested floors
+	private boolean movingUp; //true if elevator is moving up, false otherwise
+	private boolean movingDown; //true if elevator is moving down, false otherwise
+	private String status; 
 	
 	/**
 	 * @param elevatorNum the designated elevator
 	 * @param currFloor the floorSubsystem the elevatorSubsystem is currently on
-	 * @param destFloor the floorSubsystem destinations
+	 * @param reqFloor the floorSubsystem destinations
 	 * @param movingUp true if the elevatorSubsystem is moving up, false otherwise
 	 */
-	public ElevatorData(int elevatorNum, int currFloor, ArrayList<Integer> destFloor, boolean movingUp) {
+	public ElevatorData(int elevatorNum, int currFloor, ArrayList<Integer> reqFloor, boolean movingUp, boolean movingDown) {
 		this.elevatorNum = elevatorNum;
 		this.currFloor = currFloor;
-		this.destFloor = destFloor;
+		this.reqFloor = reqFloor;
 		this.movingUp = movingUp;
+		this.movingDown = movingDown;
+		
+		status = "Elevator " + elevatorNum + ": " + reqFloor.size() + " requested floors and ";
+		
+		if (movingUp) 
+			status += "currently moving up.";
+		else if (movingDown) 
+			status += "currently moving down.";
+		else
+			status += "currently idle.";
 	}
 	
 	/**
@@ -40,8 +51,8 @@ public class ElevatorData implements Serializable {
 	 * Returns the list of floorSubsystem destinations
 	 * @return the floorSubsystem destinations
 	 */
-	public ArrayList<Integer> getDestinationFloor() {
-		return destFloor;
+	public ArrayList<Integer> getRequestedFloors() {
+		return reqFloor;
 	}
 	
 	/**

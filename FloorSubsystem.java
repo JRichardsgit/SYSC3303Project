@@ -12,16 +12,21 @@ import java.util.Date;
 
 public class FloorSubsystem {
 
+	//Sockets and Packets
 	DatagramPacket sendPacket, receivePacket;
 	DatagramSocket sendReceiveSocket;
 
+	//Data Structures for relaying data
 	private FloorData floorDat;
 	private SchedulerData scheDat;
 	
+	//List of floors
 	private Floor floors[];
 
-	private String message;
-
+	/**
+	 * Create a new floor subsystem
+	 * @param numFloors number of floors
+	 */
 	public FloorSubsystem(int numFloors) {
 		try {
 			// Construct a datagram socket and bind it to any available
@@ -40,22 +45,16 @@ public class FloorSubsystem {
 		}
 	}
 
-	public void send() {
+	/**
+	 * Send packet to scheduler
+	 * @param floorDat the floor data to be sent
+	 */
+	public void send(FloorData floorDat) {
 		// Prepare a DatagramPacket and send it via sendReceiveSocket
 		// to port 4000 on the destination host.
-
-		Date date = new Date();
-		String strDateFormat = "hh:mm:ss a";
-		DateFormat dateFormat = new SimpleDateFormat(strDateFormat);
-		String formattedDate = dateFormat.format(date);
-
-		String s = "Scheduler i need an elevatorSubsystem. The floorSubsystem number is 4, button pressed is up, elevatorSubsystem number is 1, and the time is "
-				+ formattedDate;
+		this.floorDat = floorDat;
 
 		try {
-			floorDat = new FloorData(1, true);
-			floorDat.setStatus("Requesting ElevatorSubsystem.");
-
 			// Convert the FloorData object into a byte array
 			ByteArrayOutputStream baoStream = new ByteArrayOutputStream();
 			ObjectOutputStream ooStream = new ObjectOutputStream(new BufferedOutputStream(baoStream));
@@ -65,14 +64,14 @@ public class FloorSubsystem {
 			byte msg[] = baoStream.toByteArray();
 
 			// Construct a datagram packet that is to be sent to a specified port
-			sendPacket = new DatagramPacket(msg, msg.length, InetAddress.getLocalHost(), 4000);
+			sendPacket = new DatagramPacket(msg, msg.length, InetAddress.getLocalHost(), 3000);
 
 			// Send the datagram packet to the server via the send/receive socket.
 			sendReceiveSocket.send(sendPacket);
 
 			processSend();
 
-			System.out.println("FloorSubsystem: Packet sent to scheduler.\n");
+			print("FloorSubsystem: Request sent to scheduler.\n");
 
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
@@ -81,11 +80,15 @@ public class FloorSubsystem {
 		}
 
 	}
+	
 
+	/**
+	 * Receive a packet from the scheduler
+	 */
 	public void receive() {
 
 		// Construct a DatagramPacket for receiving packets up
-		// to 100 bytes long (the length of the byte array).
+		// to 5000 bytes long (the length of the byte array).
 
 		byte data[] = new byte[5000];
 		receivePacket = new DatagramPacket(data, data.length);
@@ -120,39 +123,83 @@ public class FloorSubsystem {
 
 		processReceived();
 
-		System.out.println("FloorSubsystem: Packet received from scheduler.\n");
-
-		// We're finished, so close the socket.
-		sendReceiveSocket.close();
+		print("FloorSubsystem: Packet received from scheduler.\n");
 
 	}
+	
+	/**
+	 * Close the data socket
+	 */
+	public void closeSocket() {
+		sendReceiveSocket.close();
+	}
+	
+	/**
+	 * Process the received packet
+	 */
 
 	public void processReceived() {
 		// Process the received datagram.
-		System.out.println("FloorSubsystem: Packet received:");
-		System.out.println("From host: " + receivePacket.getAddress());
-		System.out.println("Host port: " + receivePacket.getPort());
-		int len = receivePacket.getLength();
-		System.out.println("Length: " + len);
-		System.out.print("Containing: " + scheDat.getStatus() + "\n");
+		print("FloorSubsystem: Packet received:");
+		print("From host: " + receivePacket.getAddress());
+		print("Host port: " + receivePacket.getPort());
+		print("Length: " + receivePacket.getLength());
+		print("Containing: \n" + scheDat.getStatus() + "\n");
 
 	}
+	
+	/**
+	 * Process the sent packet
+	 */
 
 	public void processSend() {
 		// Process Sent Datagram
-		System.out.println("FloorSubsystem: Sending packet to scheduler:");
-		int len = sendPacket.getLength();
-		System.out.println("Length: " + len);
-		System.out.print("Containing: " + floorDat.getStatus() + "\n");
+		print("FloorSubsystem: Sending packet to scheduler:");
+		print("Packet length: " + sendPacket.getLength());
+		print("Containing: \n" + floorDat.getStatus() + "\n");
  
 	}
+	
+	/**
+	 * Return the last sent floor data packet
+	 * @return the floor data
+	 */
 	
 	public FloorData getFloorData() {
 		return floorDat;
 	}
 	
+	/**
+	 * Set the floor data
+	 * @param floorDat
+	 */
+	public void setFloorData(FloorData floorDat) {
+		this.floorDat = floorDat; 
+	}
+	
+	/**
+	 * Return the last received scheduler data packet
+	 * @return
+	 */
 	public SchedulerData getSchedulerData() {
 		return scheDat;
+	}
+	
+	/**
+	 * Return the floor with the corresponding floor number
+	 * @param floorNum the floor number
+	 * @return corresponding floor
+	 */
+	public Floor getFloor(int floorNum) {
+		return floors[floorNum - 1];
+	}
+	
+	/**
+	 * Prints the message on the console
+	 * @param message
+	 */
+	public void print(String message) {
+		System.out.println(message);
 	}
 
 	public static void main(String args[]) {
@@ -160,8 +207,27 @@ public class FloorSubsystem {
 		//Create a floor subsystem with 5 floors
 		FloorSubsystem c = new FloorSubsystem(5);
 		
-		c.send();
-		c.receive();
+		/**
+		 * FLOOR SIMULATION
+		 * 
+		 * Floor simulation data to be later read in by input file.
+		 * For now, hard code simulation data.
+		 */
+		
+		//Request to go up from floor 1, 2, 3
+		c.getFloor(1).pressUp();
+		c.send(c.getFloor(1).getFloorData());
+		
+		c.getFloor(2).pressUp();
+		c.send(c.getFloor(2).getFloorData());
+		
+		c.getFloor(3).pressUp();
+		c.send(c.getFloor(3).getFloorData());
+		
+		//Request to go down from floor 5
+		c.getFloor(5).pressUp();
+		c.send(c.getFloor(5).getFloorData());
 
+		c.closeSocket();
 	}
 }

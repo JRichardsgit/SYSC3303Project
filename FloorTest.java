@@ -28,7 +28,7 @@ class FloorTest {
 	@Test
 	void floorDataTest() {
 		// Initiate the interaction between the floorSubsystem sending data to the scheduler
-		floorSubsystem.send();
+		//floorSubsystem.send();
 		scheduler.floorReceive();
 
 		assertEquals(floorSubsystem.getFloorData().getStatus(), scheduler.getFloorData().getStatus());
