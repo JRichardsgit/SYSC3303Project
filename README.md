@@ -1,4 +1,5 @@
-# SYSC 3303 Project, Gabriele Sarwar, Jolar Tabungar, James Richards, Akash Joe, Ryan Tordesillas
+# SYSC 3303 Project: L2G2_Iteration2_
+## Group Members: Gabriele Sarwar, Jolar Tabungar, James Richards, Akash Joe, Ryan Tordesillas
 This project aims to design a real time elevator control system that will quickly and efficiently transport passengers between floors.
 
 ## Classes:
@@ -14,13 +15,21 @@ This project aims to design a real time elevator control system that will quickl
 
 ## Setup Instructions:
 
-* 1 Run Elevator.java
-* 2 Run Scheduler.java
-* 3 Run Floor.java
+#### 1. Run ElevatorSubsystem.java
+#### 2. Run Scheduler.java
+#### 3. Run FloorSubsystem.java
 
 
 * After, Use the "display selected console" to show each console output, starting from floor, then scheduler output, then elevator output.
 
-* The flow is as follows: Floor requests and elevator from scheduler, Scheduler notifies request has been recieved and contacts elevator  system, the elevator system processes information and sends an elevator and notifies scheduler.
+#### System Flow: 
+* Floor requests an elevator and sends it to the scheduler
+* Scheduler decides which elevator to send the request
+* Scheduler relays request to the elevator subsystem
+* Elevator subsystem relays it to the appropriate elevator
+* Elevator that receives the request responds to the scheduler and updates it about it's status
 
-** Testing and error handling are incorporated in the respective test cases (ElevatorDataTest, FloorDataTest, SchedulerDataTest)
+#### Testing
+* Testing and error handling are incorporated in the respective test cases (ElevatorTest, FloorTest, SchedulerTest)
+* Run each test case as a java application, separately
+
