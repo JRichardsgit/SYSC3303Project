@@ -1,4 +1,4 @@
-# SYSC 3303 Project: L2G2_Iteration2_
+# SYSC 3303 Project: L2_G10_Iteration2
 ## Group Members: Gabriele Sarwar, Jolar Tabungar, James Richards, Akash Joe, Ryan Tordesillas
 This project aims to design a real time elevator control system that will quickly and efficiently transport passengers between floors.
 
