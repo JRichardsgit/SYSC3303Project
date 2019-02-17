@@ -4,14 +4,20 @@ This project aims to design a real time elevator control system that will quickl
 
 ## Classes:
 
-### Floor
-* Acts as the client, sends floor data requests to the scheduler for an elevator, as well as the floor number, button pressed and time which it was pressed.
+### FloorSubsystem
+* Acts as the client, sends floor requests to the scheduler for relaying to an elevator, manages the sending and receiving requests for all the floors
+
+#### Floor
+* Node of the FloorSubsystem; handles its respective floor requests, has its own floor number and up/down buttons, and floor lamps
 
 ### Scheduler
-* Acts as the system server and manages interactions between the elevator and floor systems. Once the request from floor is recieved, it tells floor that it has been received and then contacts elevator system to request an elevator at the floor level. It tells the elevator where to go and how to get there.
+* Acts as the system server and manages interactions between the elevator and floor systems. Once a floor request is received, it is routed to the appropriate elevator and relays the request to the elevator subsystem.
 
-### Elevator 
-* Receives requests from scheduler, processes the information and sends an elevator. It lets scheduler know that the elevator has been sent.
+### ElevatorSubsystem 
+* Receives relayed floor requests from the scheduler and sends it to the routed elevator node
+
+#### Elevator
+* Node of the ElevatorSubsystem; handles it's own movement, opening/closing of doors, keeps track of all pending floor requests, lamps, and updates the scheduler about its status
 
 ## Setup Instructions:
 
