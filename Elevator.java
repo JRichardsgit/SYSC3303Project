@@ -60,6 +60,13 @@ public class Elevator extends Thread {
 	}
 	
 	/**
+	 * Returns true if the elevator is moving up, false otherwise
+	 */
+	public boolean isMovingUp() {
+		return movingUp;
+	}
+	
+	/**
 	 * Set flags for motor moving the elevator down
 	 */
 	public void moveDown() {
@@ -68,11 +75,25 @@ public class Elevator extends Thread {
 	}
 	
 	/**
+	 * Returns true if the elevator is moving up, false otherwise
+	 */
+	public boolean isMovingDown() {
+		return movingDown;
+	}
+	
+	/**
 	 * Set flags for idle motor
 	 */
 	public void moveStop() {
 		movingUp = false;
 		movingDown = false;
+	}
+	
+	/**
+	 * Returns true if idle
+	 */
+	public boolean isIdle() {
+		return (!movingUp && !movingDown);
 	}
 	
 	/**

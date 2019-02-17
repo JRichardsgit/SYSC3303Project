@@ -204,6 +204,15 @@ public class ElevatorSubsystem {
 	}
 	
 	/**
+	 * Close the sockets
+	 */
+	public void closeSockets() {
+		// We're finished, so close the sockets.
+		sendSocket.close();
+		receiveSocket.close();
+	}
+	
+	/**
 	 * Print a status message in the console
 	 * @param message the message to be printed
 	 */

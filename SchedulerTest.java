@@ -12,41 +12,49 @@ import org.junit.jupiter.api.Test;
  */
 class SchedulerTest {
 
-	Scheduler scheduler;
-	FloorSubsystem floorSubsystem;
-	ElevatorSubsystem elevatorSubsystem;
+	private Scheduler scheduler;
+	private FloorSubsystem floorSubsystem;
+	private ElevatorSubsystem elevatorSubsystem;
 
 	@BeforeEach
 	void setUp() throws Exception {
+		//Set up system with 5 floors and 2 elevators
+		elevatorSubsystem = new ElevatorSubsystem(5, 2);
 		scheduler = new Scheduler(5, 2);
 		floorSubsystem = new FloorSubsystem(5);
-		elevatorSubsystem = new ElevatorSubsystem(5, 2);
+
+		//Floor sends floor request to scheduler
+		floorSubsystem.send(new FloorData(2, true));
+
+		//Scheduler receives request and relays it to an elevator
+		scheduler.floorReceive();
+		scheduler.updateRequests();
+		scheduler.routeElevator();
+		scheduler.elevatorSend(scheduler.getSchedulerData());
+		
+		//Elevator system receives request and routes it to appropriate elevator
+		elevatorSubsystem.receive();
+		elevatorSubsystem.routePacket();
 	}
 
 	@AfterEach
 	void tearDown() throws Exception {
+		elevatorSubsystem.closeSockets();
+		scheduler.closeSockets();
+		floorSubsystem.closeSocket();
 	}
-
 	@Test
-	void schedulerDataTest() {
-		// Assert that the datapackets sent were the same ones received
-
-		// Initiate the scheduler to send data to the elevatorSubsystem and floorSubsystem
-
-		// Check the data exchange between elevatorSubsystem and scheduler and verify that the
-		// data is the same
-		//floorSubsystem.send();
-		scheduler.floorReceive();
-		//scheduler.elevatorSend();
-		elevatorSubsystem.receive();
-		assertEquals(scheduler.getSchedulerData().getStatus(), elevatorSubsystem.getSchedulerData().getStatus());
-
-		// Check the exchange between the scheduler and floorSubsystem and verify that the data
-		// is the same
-		//scheduler.floorSend();
-		floorSubsystem.receive();
-		assertEquals(scheduler.getSchedulerData().getStatus(), floorSubsystem.getSchedulerData().getStatus());
-
+	void TestReceiveFloorRequest() {
+		//Verify that the scheduler properly received the floor request
+		assertEquals(scheduler.getFloorData().getFloorNum(), 2);
+		assertTrue(scheduler.getFloorData().upPressed());
+	}
+	
+	@Test
+	void TestRelayRequest() {
+		//Verify the elevator received the relayed request and has now arrived on that floor
+		assertEquals(elevatorSubsystem.getSchedulerData().getElevatorNumber(), scheduler.getSchedulerData().getElevatorNumber());
+		assertEquals(elevatorSubsystem.getElevatorData().getCurrentFloor(), 2);
 	}
 
 }

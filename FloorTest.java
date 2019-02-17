@@ -11,27 +11,35 @@ import org.junit.jupiter.api.Test;
  *
  */
 class FloorTest {
-
-	FloorSubsystem floorSubsystem;
-	Scheduler scheduler;
+	
+	private Scheduler scheduler;
+	private FloorSubsystem floorSubsystem;
+	private ElevatorSubsystem elevatorSubsystem;
 
 	@BeforeEach
 	void setUp() throws Exception {
-		floorSubsystem = new FloorSubsystem(5); // Create a new floorSubsystem with 5 floors
-		scheduler = new Scheduler(5, 2); // Create a new scheduler for a system with 5 floors
+		//Initiate system with 5 floors and two elevators
+		elevatorSubsystem = new ElevatorSubsystem(5, 2);
+		scheduler = new Scheduler(5, 2);
+		floorSubsystem = new FloorSubsystem(5);
+
+		//Send the floor request to the scheduler
+		floorSubsystem.send(new FloorData(2, true));
+		scheduler.floorReceive();
+		scheduler.updateRequests();
 	}
 
 	@AfterEach
 	void tearDown() throws Exception {
+		elevatorSubsystem.closeSockets();
+		scheduler.closeSockets();
+		floorSubsystem.closeSocket();
 	}
 
 	@Test
-	void floorDataTest() {
-		// Initiate the interaction between the floorSubsystem sending data to the scheduler
-		//floorSubsystem.send();
-		scheduler.floorReceive();
-
-		assertEquals(floorSubsystem.getFloorData().getStatus(), scheduler.getFloorData().getStatus());
-		assertEquals(floorSubsystem.getFloorData().getFloorNum(), scheduler.getFloorData().getFloorNum());
+	void TestFloorRequestSent() {
+		//Verify that the scheduler received the floor request
+		assertEquals(scheduler.getFloorData().getFloorNum(), 2);
+		assertTrue(scheduler.getFloorData().upPressed());
 	}
 }
