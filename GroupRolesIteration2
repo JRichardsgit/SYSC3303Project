@@ -2,6 +2,6 @@ Group Roles for Iteration 2
 
 Gabriel - Made group role file on github, reviewed sequenced diagram for errors.
 Akash - Sequence/Timing diagrams for the error scenarios of the elevator system, pseudo code of cases at different positions of the elevator
-Jolar - Testcases, coding, data structures
-Ryan - brainstorm
-James - pseudo code of cases at different positions of the elevator
+Jolar - Test Cases, Coding, Data structures
+Ryan - UML Diagram
+James - Pseudo code of the scheduler logic
