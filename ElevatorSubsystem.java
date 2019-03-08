@@ -10,8 +10,10 @@ import java.util.ArrayList;
 public class ElevatorSubsystem {
 
 	//Sockets and Packets
-	DatagramPacket sendPacket, receivePacket;
-	DatagramSocket sendSocket, receiveSocket;
+	DatagramPacket receivePacket;
+	DatagramSocket receiveSocket;
+	
+	InetAddress schedulerAddress;
 
 	//Data Structures for relaying data
 	private ElevatorData elevDat;
@@ -26,11 +28,6 @@ public class ElevatorSubsystem {
 	 */
 	public ElevatorSubsystem( int numFloors, int numElevators) {
 		try {
-			// Construct a datagram socket and bind it to any available
-			// port on the local host machine. This socket will be used to
-			// send UDP Datagram packets.
-			sendSocket = new DatagramSocket();
-
 			// Construct a datagram socket and bind it to port 2000
 			// on the local host machine. This socket will be used to
 			// receive UDP Datagram packets.
@@ -48,56 +45,10 @@ public class ElevatorSubsystem {
 		for (int i = 0; i < numElevators; i ++) {
 			elevatorList[i] = (new Elevator(i, numFloors, this));
 			elevatorList[i].start();
-			print("elevator " + i + " started");
+			print("Elevator " + i + " started.");
 		}
 	}
 
-	/**
-	public void receiveAndReply() {
-		receive();
-		wait5s();
-		send();
-		// We're finished, so close the sockets.
-		sendSocket.close();
-		receiveSocket.close();
-	}
-	*/
-
-	/**
-	 * Send a packet to the scheduler
-	 */
-	public void send(ElevatorData elevDat) {
-		
-		this.elevDat = elevDat;
-		try {
-			// Convert the ElevatorData object into a byte array
-			ByteArrayOutputStream baoStream = new ByteArrayOutputStream();
-			ObjectOutputStream ooStream = new ObjectOutputStream(new BufferedOutputStream(baoStream));
-			ooStream.flush();
-			ooStream.writeObject(elevDat);
-			ooStream.flush();
-
-			byte msg[] = baoStream.toByteArray();
-			sendPacket = new DatagramPacket(msg, msg.length, receivePacket.getAddress(), 3000);
-
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-
-		processSend();
-
-		// Send the datagram packet to the client via the send socket.
-		try {
-			sendSocket.send(sendPacket);
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
-
-		print("ElevatorSubsystem: Packet sent to scheduler.\n");
-
-	}
 
 	/**
 	 * Receive a packet from the scheduler
@@ -112,8 +63,9 @@ public class ElevatorSubsystem {
 
 		// Block until a datagram packet is received from receiveSocket.
 		try {
-			print("Waiting..."); // so we know we're waiting
+			//print("Waiting..."); // so we know we're waiting
 			receiveSocket.receive(receivePacket);
+			
 		} catch (IOException e) {
 			print("IO Exception: likely:");
 			print("Receive Socket Timed Out.\n" + e);
@@ -144,17 +96,6 @@ public class ElevatorSubsystem {
 	}
 
 	/**
-	 * Process the sent packet
-	 */
-	public void processSend() {
-		print("ElevatorSubsystem: Sending packet:");
-		print("To host: Scheduler");
-		print("Destination host port: " + sendPacket.getPort());
-		print("Length: " + sendPacket.getLength());
-		print("Containing: \n" + elevDat.getStatus() + "\n");
-	}
-
-	/**
 	 * Process the received packet
 	 */
 	public void processReceive() {
@@ -164,6 +105,10 @@ public class ElevatorSubsystem {
 		print("Host port: " + receivePacket.getPort());
 		print("Length: " + receivePacket.getLength());
 		print("Containing: \n" + scheDat.getStatus() + "\n");
+	}
+	
+	public InetAddress getSchedulerAddress() {
+		return receivePacket.getAddress();
 	}
 
 	public void wait5s() {
@@ -210,7 +155,6 @@ public class ElevatorSubsystem {
 	 */
 	public void closeSockets() {
 		// We're finished, so close the sockets.
-		sendSocket.close();
 		receiveSocket.close();
 	}
 	
@@ -232,6 +176,12 @@ public class ElevatorSubsystem {
 		while(true) {
 			c.receive();
 			c.routePacket();
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 
 	}

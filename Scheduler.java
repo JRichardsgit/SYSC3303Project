@@ -149,7 +149,7 @@ public class Scheduler {
 
 		// Block until a datagram packet is received from receiveSocket.
 		try {
-			print("Waiting..."); // so we know we're waiting
+			//print("Waiting..."); // so we know we're waiting
 			receiveSocket.receive(receivePacket);
 		} catch (IOException e) {
 			print("IO Exception: likely:");
