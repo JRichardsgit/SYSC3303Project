@@ -215,10 +215,10 @@ public class FloorSubsystem {
 		 */
 		
 		//Request to go up from floor 1, should send elevator 
-		c.getFloor(1).pressUp();
-		c.send(c.getFloor(1).getFloorData());
+		//c.getFloor(1).pressUp();
+		//c.send(c.getFloor(1).getFloorData());
 		
-		c.getFloor(4).pressUp();
+		c.getFloor(4).pressDown();
 		c.send(c.getFloor(4).getFloorData());
 		
 		c.getFloor(2).pressUp();

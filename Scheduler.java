@@ -191,7 +191,7 @@ public class Scheduler {
 			byte msg[] = baoStream.toByteArray();
 
 			elevatorSendPacket = new DatagramPacket(msg, msg.length, floorReceivePacket.getAddress(), 2000);// elevatorSubsystem
-																											// server
+			// server
 			// port
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
@@ -320,7 +320,7 @@ public class Scheduler {
 		if (!reqFloors.contains(floorDat.getFloorNum()))
 			reqFloors.add(floorDat.getFloorNum());
 	}
-	
+
 	/**
 	 * Clear the scheduler's floor requests
 	 */
@@ -328,7 +328,7 @@ public class Scheduler {
 		reqFloors.clear();
 	}
 
-	
+
 	/**
 	 * Update the scheduler's lamps
 	 */
@@ -343,6 +343,7 @@ public class Scheduler {
 	 * @return
 	 */
 	public boolean elevatorSameFloor() {
+		potentialRoutes.clear();
 		boolean caseTrue = false;
 		for (int i = 0; i < elevDataList.length; i++) {
 			if (floorDat.getFloorNum() == elevDataList[i].getCurrentFloor()) {
@@ -350,10 +351,8 @@ public class Scheduler {
 				potentialRoutes.add(i);
 			}
 		}
-		if (!caseTrue)
-			potentialRoutes.clear();
-		
-		return false;
+
+		return caseTrue;
 	}
 
 	/**
@@ -362,6 +361,7 @@ public class Scheduler {
 	 * @return
 	 */
 	public boolean elevatorAboveFloor() {
+		potentialRoutes.clear();
 		boolean caseTrue = false;
 		for (int i = 0; i < elevDataList.length; i++) {
 			if (elevDataList[i].getCurrentFloor() > floorDat.getFloorNum()) {
@@ -369,9 +369,8 @@ public class Scheduler {
 				potentialRoutes.add(i);
 			}
 		}
-		if (!caseTrue)
-			potentialRoutes.clear();
-		
+
+
 		return caseTrue;
 	}
 
@@ -381,6 +380,7 @@ public class Scheduler {
 	 * @return
 	 */
 	public boolean elevatorBelowFloor() {
+		potentialRoutes.clear();
 		boolean caseTrue = false;
 		for (int i = 0; i < elevDataList.length; i++) {
 			if (elevDataList[i].getCurrentFloor() < floorDat.getFloorNum()) {
@@ -388,8 +388,7 @@ public class Scheduler {
 				potentialRoutes.add(i);
 			}
 		}
-		if (!caseTrue)
-			potentialRoutes.clear();
+
 		return caseTrue;
 	}
 
@@ -421,19 +420,6 @@ public class Scheduler {
 			}
 		}
 
-		// Case 3: There are elevator(s) above request floor, floor request down
-		else if (elevatorAboveFloor() && floorDat.upPressed()) {
-			print(potentialRoutes.size() + " potential routes.");
-			routedElevator = potentialRoutes.get(0);
-			// Find the closest elevator that is moving down
-			for (Integer i : potentialRoutes) {
-				if ((Math.abs(elevDataList[i].getCurrentFloor() - floorDat.getFloorNum())) < 
-						(Math.abs(elevDataList[routedElevator].getCurrentFloor() - floorDat.getFloorNum()))
-						&& (elevDataList[i].isMovingDown() || elevDataList[i].isIdle()))
-					routedElevator = i;
-			}
-		}
-
 		// Case 4: There are elevator(s) below request floor, floor request up
 		else if (elevatorBelowFloor() && floorDat.upPressed()) {
 			print(potentialRoutes.size() + " potential routes.");
@@ -446,6 +432,21 @@ public class Scheduler {
 					routedElevator = i;
 			}
 		}
+
+		// Case 3: There are elevator(s) above request floor, floor request up
+		else if (elevatorAboveFloor() && floorDat.upPressed()) {
+			print(potentialRoutes.size() + " potential routes.");
+			routedElevator = potentialRoutes.get(0);
+			// Find the closest elevator that is moving down
+			for (Integer i : potentialRoutes) {
+				if ((Math.abs(elevDataList[i].getCurrentFloor() - floorDat.getFloorNum())) < 
+						(Math.abs(elevDataList[routedElevator].getCurrentFloor() - floorDat.getFloorNum()))
+						&& (elevDataList[i].isMovingDown() || elevDataList[i].isIdle()))
+					routedElevator = i;
+			}
+		}
+
+
 
 		// Case 5: There are elevator(s) below request floor, floor request up
 		else if (elevatorBelowFloor() && floorDat.downPressed()) {
@@ -531,12 +532,18 @@ public class Scheduler {
 			c.routeElevator();
 			// Relay request to appropriate elevator
 			c.elevatorSend(c.getSchedulerData());
-			
+
 			//Clear requests
 			c.clearRequest();
 
+
 			// Receive input data from elevator to light appropriate lamps
 			c.elevatorReceive();
+
+			//update final floor
+			c.elevatorReceive();
+
+
 			// Light appropriate lamps
 			c.updateLamps();
 		}
