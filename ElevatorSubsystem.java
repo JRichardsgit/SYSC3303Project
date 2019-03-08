@@ -47,6 +47,8 @@ public class ElevatorSubsystem {
 		
 		for (int i = 0; i < numElevators; i ++) {
 			elevatorList[i] = (new Elevator(i, numFloors, this));
+			elevatorList[i].start();
+			print("elevator " + i + " started");
 		}
 	}
 
@@ -76,7 +78,7 @@ public class ElevatorSubsystem {
 			ooStream.flush();
 
 			byte msg[] = baoStream.toByteArray();
-			sendPacket = new DatagramPacket(msg, msg.length, receivePacket.getAddress(), 4000);
+			sendPacket = new DatagramPacket(msg, msg.length, receivePacket.getAddress(), 3000);
 
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block

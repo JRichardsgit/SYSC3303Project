@@ -218,11 +218,25 @@ public class FloorSubsystem {
 		c.getFloor(1).pressUp();
 		c.send(c.getFloor(1).getFloorData());
 		
+		try {
+			Thread.sleep(10000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		c.getFloor(4).pressUp();
 		c.send(c.getFloor(4).getFloorData());
 		
-		c.getFloor(2).pressUp();
-		c.send(c.getFloor(2).getFloorData());
+		try {
+			Thread.sleep(10000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		c.getFloor(1).pressUp();
+		c.send(c.getFloor(1).getFloorData());
 
 		c.closeSocket();
 	}

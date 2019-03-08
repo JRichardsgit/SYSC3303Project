@@ -23,6 +23,8 @@ public class Elevator extends Thread {
 	//Door flag
 	private boolean doorOpen;
 	
+	private boolean requestAvailable;
+	
 	//Reference to Elevator Subsystem
 	private ElevatorSubsystem eSystem;
 	
@@ -45,10 +47,26 @@ public class Elevator extends Thread {
 		doorOpen = false;
 		reqFloors = new ArrayList<Integer>();
 		currFloor = 1;
+		requestAvailable = false;
 	}
 	
+	@Override
 	public void run() {
 		
+		while (true) {
+			if (!reqFloors.isEmpty()) {
+				print(reqFloors.toString());
+				moveToNextFloor();
+			}
+			
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+	
+		}
 	}
 	
 	/**
@@ -118,22 +136,21 @@ public class Elevator extends Thread {
 		
 		currFloor = floorNum;
 			
-		print("Arrived at floor " + floorNum + ".\n");
+		print("Elevator " + elevatorNum +
+				" arrived at floor " + floorNum + ".\n");
 		
 		openDoor();
 		closeDoor();
 	}
 	
-	/**
-	 * Visit all the requested floors
-	 */
-	public void visitFloors() {
-		for (Integer i: reqFloors) {
-			moveToFloor(i);
-		}
-		reqFloors.clear();
+	public void moveToNextFloor() {
 		
+		moveToFloor(reqFloors.get(0));
+		reqFloors.remove(0);
 		moveStop();
+
+		eSystem.send(getElevatorData());
+		
 	}
 	
 	/**
@@ -152,7 +169,7 @@ public class Elevator extends Thread {
 	 */
 	public void openDoor() {
 		doorOpen = true;
-		print("Opening doors.");
+		print("Elevator " + elevatorNum + " opening doors.");
 		simulateWait(2000);
 	}
 	
@@ -161,7 +178,7 @@ public class Elevator extends Thread {
 	 */
 	public void closeDoor() {
 		doorOpen = false;
-		print("Closing doors.\n");
+		print("Elevator " + elevatorNum + " closing doors.\n");
 		simulateWait(2000);
 	}
 	
@@ -174,17 +191,10 @@ public class Elevator extends Thread {
 		reqFloors.addAll(receivedRequests);
 		Collections.sort(reqFloors);
 		
-		eSystem.send(getElevatorData());
-		
 		Random randomFloor = new Random();
-		
+	
 		//Elevator User floor selection to be further implemented
 		//chooseFloor(randomFloor.nextInt(numFloors + 1));
-		
-		visitFloors();
-		
-		
-		eSystem.send(getElevatorData());
 	}
 	
 	/**
