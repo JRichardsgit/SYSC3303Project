@@ -16,7 +16,7 @@ public class Scheduler {
 	//Send switch
 	boolean sendElevator;
 	boolean sendFloor;
-	
+
 	// Lamps and Sensors
 	private boolean floorLamps[];
 	private ArrayList<Integer> reqFloors;
@@ -37,7 +37,7 @@ public class Scheduler {
 
 	/**
 	 * Create a new Scheduler with the corresponding number of floors
-	 * 
+	 *
 	 * @param numFloors
 	 */
 	public Scheduler(int numFloors, int numElevators) {
@@ -50,9 +50,9 @@ public class Scheduler {
 			// Construct a datagram socket and bind it to port 4000
 			// on the local host machine. This socket will be used to
 			// receive UDP Datagram packets.
-			
+
 			receiveSocket = new DatagramSocket(3000);
-			
+
 			/**
 			floorReceiveSocket = new DatagramSocket(2000);
 
@@ -72,7 +72,7 @@ public class Scheduler {
 		floorLamps = new boolean[numFloors];
 		arrivalSensors = new boolean[numFloors];
 		reqFloors = new ArrayList<Integer>();
-		
+
 		sendElevator = false;
 		sendFloor = false;
 
@@ -101,7 +101,7 @@ public class Scheduler {
 
 	/**
 	 * Send the Floor subsystem a data packet
-	 * 
+	 *
 	 * @param scheDat
 	 *            the scheduler data
 	 */
@@ -138,7 +138,7 @@ public class Scheduler {
 		print("Scheduler: Packet sent to FloorSubsystem.\n");
 
 	}
-	
+
 	/**
 	 * Receive a packet
 	 */
@@ -185,7 +185,7 @@ public class Scheduler {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void processAndSend() {
 		if (sendElevator) {
 			updateRequests();
@@ -193,7 +193,7 @@ public class Scheduler {
 			elevatorSend(getSchedulerData());
 			clearRequest();
 		}
-		
+
 		else {
 			elevDataList[elevDat.getElevatorNumber()] = elevDat;
 		}
@@ -201,7 +201,7 @@ public class Scheduler {
 
 	/**
 	 * Send the Elevator subsystem a data packet
-	 * 
+	 *
 	 * @param scheDat
 	 *            the scheduler data
 	 */
@@ -238,7 +238,7 @@ public class Scheduler {
 		print("Scheduler: Packet sent to ElevatorSubsystem.\n");
 	}
 
-	
+
 	/**
 	 * Process the received floor packet
 	 */
@@ -307,7 +307,7 @@ public class Scheduler {
 		if (!reqFloors.contains(floorDat.getFloorNum()))
 			reqFloors.add(floorDat.getFloorNum());
 	}
-	
+
 	/**
 	 * Clear the scheduler's floor requests
 	 */
@@ -315,7 +315,7 @@ public class Scheduler {
 		reqFloors.clear();
 	}
 
-	
+
 	/**
 	 * Update the scheduler's lamps
 	 */
@@ -326,10 +326,11 @@ public class Scheduler {
 
 	/**
 	 * Returns true if there is an elevator on the same floor
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean elevatorSameFloor() {
+		potentialRoutes.clear();
 		boolean caseTrue = false;
 		for (int i = 0; i < elevDataList.length; i++) {
 			if (floorDat.getFloorNum() == elevDataList[i].getCurrentFloor()) {
@@ -337,18 +338,17 @@ public class Scheduler {
 				potentialRoutes.add(i);
 			}
 		}
-		if (!caseTrue)
-			potentialRoutes.clear();
-		
-		return false;
+
+		return caseTrue;
 	}
 
 	/**
 	 * Returns true if there is an elevator above the requested floor
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean elevatorAboveFloor() {
+		potentialRoutes.clear();
 		boolean caseTrue = false;
 		for (int i = 0; i < elevDataList.length; i++) {
 			if (elevDataList[i].getCurrentFloor() > floorDat.getFloorNum()) {
@@ -356,18 +356,18 @@ public class Scheduler {
 				potentialRoutes.add(i);
 			}
 		}
-		if (!caseTrue)
-			potentialRoutes.clear();
-		
+
+
 		return caseTrue;
 	}
 
 	/**
 	 * Returns true if there is an elevator below the requested floor
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean elevatorBelowFloor() {
+		potentialRoutes.clear();
 		boolean caseTrue = false;
 		for (int i = 0; i < elevDataList.length; i++) {
 			if (elevDataList[i].getCurrentFloor() < floorDat.getFloorNum()) {
@@ -375,8 +375,7 @@ public class Scheduler {
 				potentialRoutes.add(i);
 			}
 		}
-		if (!caseTrue)
-			potentialRoutes.clear();
+
 		return caseTrue;
 	}
 
@@ -401,20 +400,7 @@ public class Scheduler {
 			routedElevator = potentialRoutes.get(0);
 			// Find the closest elevator that is moving down
 			for (Integer i : potentialRoutes) {
-				if ((Math.abs(elevDataList[i].getCurrentFloor() - floorDat.getFloorNum())) < 
-						(Math.abs(elevDataList[routedElevator].getCurrentFloor() - floorDat.getFloorNum()))
-						&& (elevDataList[i].isMovingDown() || elevDataList[i].isIdle()))
-					routedElevator = i;
-			}
-		}
-
-		// Case 3: There are elevator(s) above request floor, floor request down
-		else if (elevatorAboveFloor() && floorDat.upPressed()) {
-			print(potentialRoutes.size() + " potential routes.");
-			routedElevator = potentialRoutes.get(0);
-			// Find the closest elevator that is moving down
-			for (Integer i : potentialRoutes) {
-				if ((Math.abs(elevDataList[i].getCurrentFloor() - floorDat.getFloorNum())) < 
+				if ((Math.abs(elevDataList[i].getCurrentFloor() - floorDat.getFloorNum())) <
 						(Math.abs(elevDataList[routedElevator].getCurrentFloor() - floorDat.getFloorNum()))
 						&& (elevDataList[i].isMovingDown() || elevDataList[i].isIdle()))
 					routedElevator = i;
@@ -427,12 +413,27 @@ public class Scheduler {
 			routedElevator = potentialRoutes.get(0);
 			// Find the closest elevator that is moving down
 			for (Integer i : potentialRoutes) {
-				if ((Math.abs(elevDataList[i].getCurrentFloor() - floorDat.getFloorNum())) < 
+				if ((Math.abs(elevDataList[i].getCurrentFloor() - floorDat.getFloorNum())) <
 						(Math.abs(elevDataList[routedElevator].getCurrentFloor() - floorDat.getFloorNum()))
 						&& (elevDataList[i].isMovingUp() || elevDataList[i].isIdle()))
 					routedElevator = i;
 			}
 		}
+
+		// Case 3: There are elevator(s) above request floor, floor request up
+		else if (elevatorAboveFloor() && floorDat.upPressed()) {
+			print(potentialRoutes.size() + " potential routes.");
+			routedElevator = potentialRoutes.get(0);
+			// Find the closest elevator that is moving down
+			for (Integer i : potentialRoutes) {
+				if ((Math.abs(elevDataList[i].getCurrentFloor() - floorDat.getFloorNum())) <
+						(Math.abs(elevDataList[routedElevator].getCurrentFloor() - floorDat.getFloorNum()))
+						&& (elevDataList[i].isMovingDown() || elevDataList[i].isIdle()))
+					routedElevator = i;
+			}
+		}
+
+
 
 		// Case 5: There are elevator(s) below request floor, floor request up
 		else if (elevatorBelowFloor() && floorDat.downPressed()) {
@@ -440,7 +441,7 @@ public class Scheduler {
 			routedElevator = potentialRoutes.get(0);
 			// Find the closest elevator that is moving down
 			for (Integer i : potentialRoutes) {
-				if ((Math.abs(elevDataList[i].getCurrentFloor() - floorDat.getFloorNum())) < 
+				if ((Math.abs(elevDataList[i].getCurrentFloor() - floorDat.getFloorNum())) <
 						(Math.abs(elevDataList[routedElevator].getCurrentFloor() - floorDat.getFloorNum()))
 						&& (elevDataList[i].isMovingUp() || elevDataList[i].isIdle()))
 					routedElevator = i;
@@ -455,7 +456,7 @@ public class Scheduler {
 		 */
 		else {
 			for (Integer i : potentialRoutes) {
-				if ((Math.abs(elevDataList[i].getCurrentFloor() - floorDat.getFloorNum())) < 
+				if ((Math.abs(elevDataList[i].getCurrentFloor() - floorDat.getFloorNum())) <
 						(Math.abs(elevDataList[routedElevator].getCurrentFloor() - floorDat.getFloorNum()))
 						&& elevDataList[i].isIdle())
 					routedElevator = i;
@@ -468,7 +469,7 @@ public class Scheduler {
 
 	/**
 	 * Return the last received elevator data
-	 * 
+	 *
 	 * @return
 	 */
 	public ElevatorData getElevatorData() {
@@ -477,7 +478,7 @@ public class Scheduler {
 
 	/**
 	 * Return the scheduler's current data
-	 * 
+	 *
 	 * @return the current scheduler data
 	 */
 	public SchedulerData getSchedulerData() {
@@ -486,7 +487,7 @@ public class Scheduler {
 
 	/**
 	 * Return the last received floor data
-	 * 
+	 *
 	 * @return
 	 */
 	public FloorData getFloorData() {
@@ -495,7 +496,7 @@ public class Scheduler {
 
 	/**
 	 * Prints the message on the console
-	 * 
+	 *
 	 * @param message
 	 */
 	public void print(String message) {
@@ -521,12 +522,18 @@ public class Scheduler {
 			c.routeElevator();
 			// Relay request to appropriate elevator
 			c.elevatorSend(c.getSchedulerData());
-			
+
 			//Clear requests
 			c.clearRequest();
 
+
 			// Receive input data from elevator to light appropriate lamps
 			c.elevatorReceive();
+
+			//update final floor
+			c.elevatorReceive();
+
+
 			// Light appropriate lamps
 			c.updateLamps();
 			*/

@@ -19,7 +19,7 @@ public class FloorSubsystem {
 	//Data Structures for relaying data
 	private FloorData floorDat;
 	private SchedulerData scheDat;
-	
+
 	//List of floors
 	private Floor floors[];
 
@@ -37,9 +37,9 @@ public class FloorSubsystem {
 			se.printStackTrace();
 			System.exit(1);
 		}
-		
+
 		floors = new Floor[numFloors];
-		
+
 		for (int i = 0; i < numFloors; i ++) {
 			floors[i] = new Floor(i + 1, this);
 		}
@@ -80,7 +80,7 @@ public class FloorSubsystem {
 		}
 
 	}
-	
+
 
 	/**
 	 * Receive a packet from the scheduler
@@ -126,14 +126,14 @@ public class FloorSubsystem {
 		print("FloorSubsystem: Packet received from scheduler.\n");
 
 	}
-	
+
 	/**
 	 * Close the data socket
 	 */
 	public void closeSocket() {
 		sendReceiveSocket.close();
 	}
-	
+
 	/**
 	 * Process the received packet
 	 */
@@ -147,7 +147,7 @@ public class FloorSubsystem {
 		print("Containing: \n" + scheDat.getStatus() + "\n");
 
 	}
-	
+
 	/**
 	 * Process the sent packet
 	 */
@@ -157,26 +157,26 @@ public class FloorSubsystem {
 		print("FloorSubsystem: Sending packet to scheduler:");
 		print("Packet length: " + sendPacket.getLength());
 		print("Containing: \n" + floorDat.getStatus() + "\n");
- 
+
 	}
-	
+
 	/**
 	 * Return the last sent floor data packet
 	 * @return the floor data
 	 */
-	
+
 	public FloorData getFloorData() {
 		return floorDat;
 	}
-	
+
 	/**
 	 * Set the floor data
 	 * @param floorDat
 	 */
 	public void setFloorData(FloorData floorDat) {
-		this.floorDat = floorDat; 
+		this.floorDat = floorDat;
 	}
-	
+
 	/**
 	 * Return the last received scheduler data packet
 	 * @return
@@ -184,7 +184,7 @@ public class FloorSubsystem {
 	public SchedulerData getSchedulerData() {
 		return scheDat;
 	}
-	
+
 	/**
 	 * Return the floor with the corresponding floor number
 	 * @param floorNum the floor number
@@ -193,7 +193,7 @@ public class FloorSubsystem {
 	public Floor getFloor(int floorNum) {
 		return floors[floorNum - 1];
 	}
-	
+
 	/**
 	 * Prints the message on the console
 	 * @param message
@@ -203,38 +203,31 @@ public class FloorSubsystem {
 	}
 
 	public static void main(String args[]) {
-		
+
 		//Create a floor subsystem with 5 floors
 		FloorSubsystem c = new FloorSubsystem(5);
-		
+
 		/**
 		 * FLOOR SIMULATION
-		 * 
+		 *
 		 * Floor simulation data to be later read in by input file.
 		 * For now, hard code simulation data.
 		 */
-		
-		//Request to go up from floor 1, should send elevator 
-		c.getFloor(1).pressUp();
-		c.send(c.getFloor(1).getFloorData());
-		
-		try {
-			Thread.sleep(10000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		c.getFloor(4).pressUp();
+
+		//Request to go up from floor 1, should send elevator
+		//c.getFloor(1).pressUp();
+		//c.send(c.getFloor(1).getFloorData());
+
+		c.getFloor(4).pressDown();
 		c.send(c.getFloor(4).getFloorData());
-		
+
 		try {
 			Thread.sleep(10000);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		c.getFloor(1).pressUp();
 		c.send(c.getFloor(1).getFloorData());
 
