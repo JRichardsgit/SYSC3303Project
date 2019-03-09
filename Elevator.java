@@ -130,10 +130,12 @@ public class Elevator extends Thread {
 	 * Process the sent packet
 	 */
 	public void processSend() {
-		print("Elevator " + elevatorNum + ": Sending packet:");
+		print("Elevator " + elevatorNum + ": Sending packet to scheduler.");
+		/*
 		print("To host: Scheduler");
 		print("Destination host port: " + sendPacket.getPort());
 		print("Length: " + sendPacket.getLength());
+		*/
 		print("Containing: \n" + getElevatorData().getStatus() + "\n");
 	}
 	
@@ -196,7 +198,10 @@ public class Elevator extends Thread {
 		else if (floorNum < currFloor) 
 			moveDown();
 		
-		while (floorNum != currFloor) {
+		else
+			moveStop();
+		
+		while (currFloor != floorNum) {
 			moveOneFloor();
 		}
 			
@@ -208,13 +213,15 @@ public class Elevator extends Thread {
 	}
 	
 	public void moveOneFloor() {
-		if (isMovingUp())
+		if (isMovingUp()) {
 			currFloor ++;
-		else if (isMovingDown())
+			simulateWait(3000);
+		}
+		else if (isMovingDown()) {
 			currFloor --;
-		
-		simulateWait(3000);
-		
+			simulateWait(3000);
+		}
+
 		send(getElevatorData());
 	}
 	
@@ -222,8 +229,6 @@ public class Elevator extends Thread {
 		moveToFloor(reqFloors.get(0));
 		reqFloors.remove(0);
 		moveStop();
-
-		send(getElevatorData());
 	}
 	
 	/**
@@ -234,7 +239,7 @@ public class Elevator extends Thread {
 		//Only add requested floor if not already requested
 		if (!reqFloors.contains((Integer) floorNum))
 			reqFloors.add(floorNum);
-		Collections.sort(reqFloors);
+		//Collections.sort(reqFloors);
 	}
 	
 	/**
@@ -262,7 +267,8 @@ public class Elevator extends Thread {
 	public void receiveRequest(ArrayList<Integer> receivedRequests) {
 		reqFloors.removeAll(receivedRequests);
 		reqFloors.addAll(receivedRequests);
-		Collections.sort(reqFloors);
+		//Collections.sort(reqFloors);
+		print("Elevator " + elevatorNum + ": " + reqFloors.toString());
 		
 		send(getElevatorData());
 		

@@ -101,9 +101,11 @@ public class ElevatorSubsystem {
 	public void processReceive() {
 		// Process the received datagram.
 		print("ElevatorSubsystem: Packet received:");
+		/*
 		print("From host: " + receivePacket.getAddress());
 		print("Host port: " + receivePacket.getPort());
 		print("Length: " + receivePacket.getLength());
+		*/
 		print("Containing: \n" + scheDat.getStatus() + "\n");
 	}
 	

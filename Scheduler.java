@@ -243,10 +243,11 @@ public class Scheduler {
 	 * Process the received floor packet
 	 */
 	public void processFloorReceived() {
-		print("Scheduler: Packet received.");
+		print("Scheduler: Packet received."); /*
 		print("From FloorSubsystem: " + receivePacket.getAddress());
 		print("Host port: " + receivePacket.getPort());
 		print("Packet Length: " + receivePacket.getLength());
+		*/
 		print("Containing: \n" + floorDat.getStatus() + "\n");
 	}
 
@@ -254,10 +255,11 @@ public class Scheduler {
 	 * Process the received elevator packet
 	 */
 	public void processElevatorReceived() {
-		print("Scheduler: Packet received.");
+		print("Scheduler: Packet received."); /*
 		print("From ElevatorSubsystem: " + receivePacket.getAddress());
 		print("Host port: " + receivePacket.getPort());
 		print("Packet length: " + receivePacket.getLength());
+		*/
 		print("Containing: \n" + elevDat.getStatus() + "\n");
 
 		elevDataList[elevDat.getElevatorNumber()] = elevDat;
@@ -268,9 +270,11 @@ public class Scheduler {
 	 */
 	public void processElevatorSend() {
 		print("Scheduler: Sending packet to ElevatorSubsystem.");
+		/*
 		print("To host: " + elevatorSendPacket.getAddress());
 		print("Destination host port: " + 2000);
 		print("Length: " + elevatorSendPacket.getLength());
+		*/
 		print("Containing: \n" + scheDat.getStatus() + "\n");
 
 	}
@@ -280,9 +284,11 @@ public class Scheduler {
 	 */
 	public void processFloorSend() {
 		print("Scheduler: Sending packet to FloorSubsystem.");
+		/*
 		print("To host: " + floorSendPacket.getAddress());
 		print("Destination host port: " + floorSendPacket.getPort());
 		print("Length: " + floorSendPacket.getLength());
+		*/
 		print("Containing: " + scheDat.getStatus() + "\n");
 
 	}
