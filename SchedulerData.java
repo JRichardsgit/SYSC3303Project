@@ -6,11 +6,18 @@ import java.util.ArrayList;
  * The Data Structure for the SchedulerData Class
  *
  */
+
+
 public class SchedulerData implements Serializable {
+	public final static int FLOOR_REQUEST = 0;
+	public final static int MOVE_REQUEST = 1;
+	
+
+	private final int mode;
 	private final int elevatorNum;
 	private boolean floorLamps[]; //true if an elevatorSubsystem is on that floorSubsystem, false if none; array of floorSubsystem lamp states
 	private ArrayList<Integer> reqFloors; //array of destination floors
-	private String status;
+	private boolean moveUp, moveDown, doorOpen;
 	
 	/**
 	 * Creates an new SchedulerData Object
@@ -18,12 +25,18 @@ public class SchedulerData implements Serializable {
 	 * @param floorLamps the array of floorLamps
 	 * @param floorSubsystem the floorSubsystem destinations to send the elevatorSubsystem
 	 */
-	public SchedulerData(int elevatorNum, boolean floorLamps[], ArrayList<Integer> reqFloors) {
+	public SchedulerData(int elevatorNum, int mode, boolean floorLamps[], ArrayList<Integer> reqFloors) {
+		this.mode = mode;
 		this.elevatorNum = elevatorNum;
 		this.floorLamps = floorLamps;
 		this.reqFloors = reqFloors;
-		
-		status = "Scheduler: Relaying Information.";
+	}
+	
+	public SchedulerData(int elevatorNum, int mode, boolean moveUp, boolean moveDown, boolean doorOpen) {
+		this.mode = mode;
+		this.elevatorNum = elevatorNum;
+		this.moveUp = moveUp;
+		this.moveDown = moveDown;
 	}
 	
 	/**
@@ -50,21 +63,41 @@ public class SchedulerData implements Serializable {
 	}
 	
 	/**
-	 * Sets the scheduler's status
-	 * @param status the status of the scheduler
+	 * Returns true if the elevatorSubsystem is moving up, false otherwise
+	 * @return true if the elevatorSubsystem is moving up, false otherwise
 	 */
-	public void setStatus(String status) {
-		this.status = status;
+	public boolean moveUp() {
+		return moveUp;
 	}
 	
 	/**
-	 * Returns the status of the scheduler
-	 * @return the status of the scheduler
+	 * Returns true if the elevator is moving down, false otherwise
+	 * @return true if the elevator is moving up, false otherwise
 	 */
-	public String getStatus() {
-		return status;
+	public boolean moveDown() {
+		return moveDown;
 	}
-
 	
+	/**
+	 * Returns true if the elevator is idle
+	 * @return true if elevator is idle, false otherwise
+	 */
+	public boolean stop() {
+		if (!moveUp && !moveDown)
+			return true;
+		return false;
+	}
+	
+	/**
+	 * 
+	 * @return doorOpen
+	 */
+	public boolean doorOpen() {
+		return doorOpen;
+	}
+	
+	public int getMode() {
+		return mode;
+	}
 
 }

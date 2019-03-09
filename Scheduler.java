@@ -13,7 +13,7 @@ public class Scheduler {
 	DatagramPacket floorSendPacket, elevatorSendPacket, floorReceivePacket, elevatorReceivePacket, receivePacket;
 	DatagramSocket sendSocket, floorReceiveSocket, elevatorReceiveSocket, receiveSocket;
 
-	//Send switch
+	// Send switch
 	boolean sendElevator;
 	boolean sendFloor;
 
@@ -135,7 +135,7 @@ public class Scheduler {
 
 		// Block until a datagram packet is received from receiveSocket.
 		try {
-			//print("Waiting..."); // so we know we're waiting
+			// print("Waiting..."); // so we know we're waiting
 			receiveSocket.receive(receivePacket);
 		} catch (IOException e) {
 			print("IO Exception: likely:");
@@ -156,8 +156,7 @@ public class Scheduler {
 				floorDat = (FloorData) o;
 				processFloorReceived();
 				sendElevator = true;
-			}
-			else {
+			} else {
 				elevDat = (ElevatorData) o;
 				processElevatorReceived();
 				sendElevator = false;
@@ -173,17 +172,21 @@ public class Scheduler {
 	}
 
 	public void processAndSend() {
+		// Route to elevator
 		if (sendElevator) {
 			updateRequests();
-			displayElevatorStates();
 			routeElevator();
 			elevatorSend(getSchedulerData());
 			clearRequest();
 		}
 
+		// Update elevator states
 		else {
 			elevDataList[elevDat.getElevatorNumber()] = elevDat;
+			manageElevators();
 		}
+
+		displayElevatorStates();
 	}
 
 	/**
@@ -206,7 +209,7 @@ public class Scheduler {
 			byte msg[] = baoStream.toByteArray();
 
 			elevatorSendPacket = new DatagramPacket(msg, msg.length, receivePacket.getAddress(), 2000);// elevatorSubsystem
-																											// server
+			// server
 			// port
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
@@ -223,16 +226,15 @@ public class Scheduler {
 		processElevatorSend();
 	}
 
-
 	/**
 	 * Process the received floor packet
 	 */
 	public void processFloorReceived() {
 		print("Scheduler: Packet received."); /*
-		print("From FloorSubsystem: " + receivePacket.getAddress());
-		print("Host port: " + receivePacket.getPort());
-		print("Packet Length: " + receivePacket.getLength());
-		*/
+												 * print("From FloorSubsystem: " + receivePacket.getAddress());
+												 * print("Host port: " + receivePacket.getPort());
+												 * print("Packet Length: " + receivePacket.getLength());
+												 */
 		print("Containing: \n" + floorDat.getStatus() + "\n");
 	}
 
@@ -241,13 +243,11 @@ public class Scheduler {
 	 */
 	public void processElevatorReceived() {
 		print("Scheduler: Packet received."); /*
-		print("From ElevatorSubsystem: " + receivePacket.getAddress());
-		print("Host port: " + receivePacket.getPort());
-		print("Packet length: " + receivePacket.getLength());
-		*/
+												 * print("From ElevatorSubsystem: " + receivePacket.getAddress());
+												 * print("Host port: " + receivePacket.getPort());
+												 * print("Packet length: " + receivePacket.getLength());
+												 */
 		print("Containing: \n" + elevDat.getStatus() + "\n");
-		
-		displayElevatorStates();
 	}
 
 	/**
@@ -256,12 +256,10 @@ public class Scheduler {
 	public void processElevatorSend() {
 		print("Scheduler: Sent packet to ElevatorSubsystem.");
 		/*
-		print("To host: " + elevatorSendPacket.getAddress());
-		print("Destination host port: " + 2000);
-		print("Length: " + elevatorSendPacket.getLength());
-		*/
-		print("Containing: \n" + scheDat.getStatus() + "\n");
-
+		 * print("To host: " + elevatorSendPacket.getAddress());
+		 * print("Destination host port: " + 2000); print("Length: " +
+		 * elevatorSendPacket.getLength());
+		 */
 	}
 
 	/**
@@ -270,12 +268,10 @@ public class Scheduler {
 	public void processFloorSend() {
 		print("Scheduler: Sent packet to FloorSubsystem.");
 		/*
-		print("To host: " + floorSendPacket.getAddress());
-		print("Destination host port: " + floorSendPacket.getPort());
-		print("Length: " + floorSendPacket.getLength());
-		*/
-		print("Containing: " + scheDat.getStatus() + "\n");
-
+		 * print("To host: " + floorSendPacket.getAddress());
+		 * print("Destination host port: " + floorSendPacket.getPort());
+		 * print("Length: " + floorSendPacket.getLength());
+		 */
 	}
 
 	/**
@@ -298,16 +294,40 @@ public class Scheduler {
 		if (!reqFloors.contains(floorDat.getFloorNum()))
 			reqFloors.add(floorDat.getFloorNum());
 	}
-	
+
 	public void displayElevatorStates() {
 		print("ELEVATOR STATUS:");
-		for (ElevatorData e: elevDataList) {
-			print("	Elevator " + e.getElevatorNumber() + " : current floor - " + e.getCurrentFloor() +
-					" , requests " + e.getRequestedFloors().toString());
+		for (ElevatorData e : elevDataList) {
+			print("	Elevator " + e.getElevatorNumber() + " : current floor - " + e.getCurrentFloor() + " , requests "
+					+ e.getRequestedFloors().toString());
 		}
 		print("\n");
 	}
-	
+
+	public void manageElevators() {
+		ElevatorData e = elevDat;
+		SchedulerData s = null;
+		// If elevator is on a requested floor, stop and open doors
+		if (e.getRequestedFloors().contains(new Integer(e.getCurrentFloor()))) {
+			s = new SchedulerData(e.getElevatorNumber(), SchedulerData.MOVE_REQUEST, false, false, true);
+		}
+
+		else {
+			// If elevator is above floor, move down, close doors
+			if (e.getCurrentFloor() > e.getRequestedFloors().get(0)) {
+				s = new SchedulerData(e.getElevatorNumber(), SchedulerData.MOVE_REQUEST, false, true,
+						false);
+			}
+			// If elevator is below floor, move up, close doors
+			else if (e.getCurrentFloor() < e.getRequestedFloors().get(0)) {
+				s = new SchedulerData(e.getElevatorNumber(), SchedulerData.MOVE_REQUEST, true, false,
+						false);
+			}
+
+		}
+		
+		elevatorSend(s);
+	}
 
 	/**
 	 * Clear the scheduler's floor requests
@@ -315,7 +335,6 @@ public class Scheduler {
 	public void clearRequest() {
 		reqFloors.clear();
 	}
-
 
 	/**
 	 * Update the scheduler's lamps
@@ -325,90 +344,92 @@ public class Scheduler {
 		floorLamps[elevDat.getCurrentFloor() - 1] = true;
 	}
 
-//	/**
-//	 * Returns true if there is an elevator on the same floor
-//	 *
-//	 * @return
-//	 */
-//	public boolean elevatorSameFloor() {
-//		potentialRoutes.clear();
-//		boolean caseTrue = false;
-//		for (int i = 0; i < elevDataList.length; i++) {
-//			if (floorDat.getFloorNum() == elevDataList[i].getCurrentFloor()) {
-//				caseTrue = true;
-//				potentialRoutes.add(i);
-//			}
-//		}
-//
-//		return caseTrue;
-//	}
-//
-//	/**
-//	 * Returns true if there is an elevator above the requested floor
-//	 *
-//	 * @return
-//	 */
-//	public boolean elevatorAboveFloor() {
-//		potentialRoutes.clear();
-//		boolean caseTrue = false;
-//		for (int i = 0; i < elevDataList.length; i++) {
-//			if (elevDataList[i].getCurrentFloor() > floorDat.getFloorNum()) {
-//				caseTrue = true;
-//				potentialRoutes.add(i);
-//			}
-//		}
-//
-//
-//		return caseTrue;
-//	}
-//	
-//	public boolean bothElevatorsAboveFloor() {
-//		potentialRoutes.clear();
-//		for (int i = 0; i < elevDataList.length; i++) {
-//			if (elevDataList[i].getCurrentFloor() < floorDat.getFloorNum()) {
-//				 return false;
-//			}
-//		}
-//		return true;
-//	}
-//
-//	
-//	public boolean bothElevatorsBelowFloor() {
-//		potentialRoutes.clear();
-//		for (int i = 0; i < elevDataList.length; i++) {
-//			if (elevDataList[i].getCurrentFloor() > floorDat.getFloorNum()) {
-//				 return false;
-//			}
-//		}
-//		return true;
-//	}
-//	/**
-//	 * Returns true if there is an elevator below the requested floor
-//	 *
-//	 * @return
-//	 */
-//	public boolean elevatorBelowFloor() {
-//		potentialRoutes.clear();
-//		boolean caseTrue = false;
-//		for (int i = 0; i < elevDataList.length; i++) {
-//			if (elevDataList[i].getCurrentFloor() < floorDat.getFloorNum()) {
-//				caseTrue = true;
-//				potentialRoutes.add(i);
-//			}
-//		}
-//
-//		return caseTrue;
-//	}
+	// /**
+	// * Returns true if there is an elevator on the same floor
+	// *
+	// * @return
+	// */
+	// public boolean elevatorSameFloor() {
+	// potentialRoutes.clear();
+	// boolean caseTrue = false;
+	// for (int i = 0; i < elevDataList.length; i++) {
+	// if (floorDat.getFloorNum() == elevDataList[i].getCurrentFloor()) {
+	// caseTrue = true;
+	// potentialRoutes.add(i);
+	// }
+	// }
+	//
+	// return caseTrue;
+	// }
+	//
+	// /**
+	// * Returns true if there is an elevator above the requested floor
+	// *
+	// * @return
+	// */
+	// public boolean elevatorAboveFloor() {
+	// potentialRoutes.clear();
+	// boolean caseTrue = false;
+	// for (int i = 0; i < elevDataList.length; i++) {
+	// if (elevDataList[i].getCurrentFloor() > floorDat.getFloorNum()) {
+	// caseTrue = true;
+	// potentialRoutes.add(i);
+	// }
+	// }
+	//
+	//
+	// return caseTrue;
+	// }
+	//
+	// public boolean bothElevatorsAboveFloor() {
+	// potentialRoutes.clear();
+	// for (int i = 0; i < elevDataList.length; i++) {
+	// if (elevDataList[i].getCurrentFloor() < floorDat.getFloorNum()) {
+	// return false;
+	// }
+	// }
+	// return true;
+	// }
+	//
+	//
+	// public boolean bothElevatorsBelowFloor() {
+	// potentialRoutes.clear();
+	// for (int i = 0; i < elevDataList.length; i++) {
+	// if (elevDataList[i].getCurrentFloor() > floorDat.getFloorNum()) {
+	// return false;
+	// }
+	// }
+	// return true;
+	// }
+	// /**
+	// * Returns true if there is an elevator below the requested floor
+	// *
+	// * @return
+	// */
+	// public boolean elevatorBelowFloor() {
+	// potentialRoutes.clear();
+	// boolean caseTrue = false;
+	// for (int i = 0; i < elevDataList.length; i++) {
+	// if (elevDataList[i].getCurrentFloor() < floorDat.getFloorNum()) {
+	// caseTrue = true;
+	// potentialRoutes.add(i);
+	// }
+	// }
+	//
+	// return caseTrue;
+	// }
 
 	public int getClosestElevator() {
-		//elevator 0
-		if(Math.abs((elevDataList[0].getCurrentFloor() - floorDat.getFloorNum())) < Math.abs((elevDataList[0].getCurrentFloor() - floorDat.getFloorNum()))) {
+		// elevator 0
+		if (Math.abs((elevDataList[0].getCurrentFloor() - floorDat.getFloorNum())) < Math
+				.abs((elevDataList[0].getCurrentFloor() - floorDat.getFloorNum()))) {
 			return 0;
-		}else {
-			return 1; //elevator 1
+		} else {
+			return 1; // elevator 1
 		}
-		
+
 	}
+
 	/**
 	 * Determine which elevator should get the floor request
 	 */
@@ -416,13 +437,12 @@ public class Scheduler {
 
 		print("Routing an elevator.");
 		potentialRoutes = new ArrayList<Integer>();
-		
+
 		routedElevator = getClosestElevator();
 
 		print("Sending elevator " + routedElevator + ".\n");
-		scheDat = new SchedulerData(routedElevator, floorLamps, reqFloors);
+		scheDat = new SchedulerData(routedElevator, SchedulerData.FLOOR_REQUEST, floorLamps, reqFloors);
 	}
-	
 
 	/**
 	 * Return the last received elevator data
@@ -470,30 +490,23 @@ public class Scheduler {
 			c.receive();
 			c.processAndSend();
 			/*
-			// Receive a request from a floor
-			c.floorReceive();
-			// Update current data
-			c.updateRequests();
-
-			// Route appropriate elevator
-			c.routeElevator();
-			// Relay request to appropriate elevator
-			c.elevatorSend(c.getSchedulerData());
-
-			//Clear requests
-			c.clearRequest();
-
-
-			// Receive input data from elevator to light appropriate lamps
-			c.elevatorReceive();
-
-			//update final floor
-			c.elevatorReceive();
-
-
-			// Light appropriate lamps
-			c.updateLamps();
-			*/
+			 * // Receive a request from a floor c.floorReceive(); // Update current data
+			 * c.updateRequests();
+			 * 
+			 * // Route appropriate elevator c.routeElevator(); // Relay request to
+			 * appropriate elevator c.elevatorSend(c.getSchedulerData());
+			 * 
+			 * //Clear requests c.clearRequest();
+			 * 
+			 * 
+			 * // Receive input data from elevator to light appropriate lamps
+			 * c.elevatorReceive();
+			 * 
+			 * //update final floor c.elevatorReceive();
+			 * 
+			 * 
+			 * // Light appropriate lamps c.updateLamps();
+			 */
 		}
 
 	}

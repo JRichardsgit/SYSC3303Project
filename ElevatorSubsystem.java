@@ -104,7 +104,7 @@ public class ElevatorSubsystem {
 		print("Host port: " + receivePacket.getPort());
 		print("Length: " + receivePacket.getLength());
 		*/
-		print("Containing: \n" + scheDat.getStatus() + "\n");
+
 	}
 	
 	public InetAddress getSchedulerAddress() {
@@ -147,7 +147,7 @@ public class ElevatorSubsystem {
 	}
 	
 	public void routePacket() {
-		getElevator(scheDat.getElevatorNumber()).receiveRequest(scheDat.getReqFloors());
+		getElevator(scheDat.getElevatorNumber()).receiveRequest(scheDat);
 	}
 	
 	/**
