@@ -53,14 +53,6 @@ public class Scheduler {
 
 			receiveSocket = new DatagramSocket(3000);
 
-			/**
-			floorReceiveSocket = new DatagramSocket(2000);
-
-			// Construct a datagram socket and bind it to port 4000
-			// on the local host machine. This socket will be used to
-			// receive UDP Datagram packets.
-			elevatorReceiveSocket = new DatagramSocket(4000);
-*/
 			// to test socket timeout (2 seconds)
 			// receiveSocket.setSoTimeout(2000);
 		} catch (SocketException se) {
@@ -79,15 +71,10 @@ public class Scheduler {
 		elevDataList = new ElevatorData[numElevators];
 		for (int i = 0; i < numElevators; i++) {
 			// Assume same starting position as set in elevator subsystem
-			elevDataList[i] = new ElevatorData(i, 0, new ArrayList<Integer>(), false, false);
+			elevDataList[i] = new ElevatorData(i, 1, new ArrayList<Integer>(), false, false);
 		}
 
 	}
-
-	/*
-	 * public void receiveAndReply() { floorReceive(); elevatorSend(); wait5s();
-	 * elevatorReceive(); floorSend(); }
-	 */
 
 	/**
 	 * Close the sockets
@@ -135,7 +122,6 @@ public class Scheduler {
 		}
 
 		processFloorSend();
-		print("Scheduler: Packet sent to FloorSubsystem.\n");
 
 	}
 
@@ -189,6 +175,7 @@ public class Scheduler {
 	public void processAndSend() {
 		if (sendElevator) {
 			updateRequests();
+			displayElevatorStates();
 			routeElevator();
 			elevatorSend(getSchedulerData());
 			clearRequest();
@@ -234,8 +221,6 @@ public class Scheduler {
 		}
 
 		processElevatorSend();
-
-		print("Scheduler: Packet sent to ElevatorSubsystem.\n");
 	}
 
 
@@ -261,15 +246,15 @@ public class Scheduler {
 		print("Packet length: " + receivePacket.getLength());
 		*/
 		print("Containing: \n" + elevDat.getStatus() + "\n");
-
-		elevDataList[elevDat.getElevatorNumber()] = elevDat;
+		
+		displayElevatorStates();
 	}
 
 	/**
 	 * Process the scheduler packet sent to the Elevator subsystem
 	 */
 	public void processElevatorSend() {
-		print("Scheduler: Sending packet to ElevatorSubsystem.");
+		print("Scheduler: Sent packet to ElevatorSubsystem.");
 		/*
 		print("To host: " + elevatorSendPacket.getAddress());
 		print("Destination host port: " + 2000);
@@ -283,7 +268,7 @@ public class Scheduler {
 	 * Process the scheduler packet sent to the Floor subsystem
 	 */
 	public void processFloorSend() {
-		print("Scheduler: Sending packet to FloorSubsystem.");
+		print("Scheduler: Sent packet to FloorSubsystem.");
 		/*
 		print("To host: " + floorSendPacket.getAddress());
 		print("Destination host port: " + floorSendPacket.getPort());
@@ -313,6 +298,16 @@ public class Scheduler {
 		if (!reqFloors.contains(floorDat.getFloorNum()))
 			reqFloors.add(floorDat.getFloorNum());
 	}
+	
+	public void displayElevatorStates() {
+		print("ELEVATOR STATUS:");
+		for (ElevatorData e: elevDataList) {
+			print("	Elevator " + e.getElevatorNumber() + " : current floor - " + e.getCurrentFloor() +
+					" , requests " + e.getRequestedFloors().toString());
+		}
+		print("\n");
+	}
+	
 
 	/**
 	 * Clear the scheduler's floor requests
@@ -427,6 +422,7 @@ public class Scheduler {
 		print("Sending elevator " + routedElevator + ".\n");
 		scheDat = new SchedulerData(routedElevator, floorLamps, reqFloors);
 	}
+	
 
 	/**
 	 * Return the last received elevator data

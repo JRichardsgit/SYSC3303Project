@@ -59,7 +59,7 @@ public class ElevatorSubsystem {
 
 		byte data[] = new byte[5000];
 		receivePacket = new DatagramPacket(data, data.length);
-		print("ElevatorSubsystem: Waiting for Packet.\n");
+		//print("ElevatorSubsystem: Waiting for Packet.\n");
 
 		// Block until a datagram packet is received from receiveSocket.
 		try {
@@ -90,9 +90,7 @@ public class ElevatorSubsystem {
 			e.printStackTrace();
 		}
 
-		processReceive();
-		
-		print("ElevatorSubsystem: Packet received from scheduler.\n");
+		//processReceive();
 	}
 
 	/**

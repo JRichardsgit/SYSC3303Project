@@ -27,14 +27,14 @@ public class ElevatorData implements Serializable {
 		this.movingUp = movingUp;
 		this.movingDown = movingDown;
 		
-		status = "Elevator " + elevatorNum + ": currently on floor " + currFloor + " with " + reqFloor.size() + " requested floors and ";
+		status = "Elevator " + elevatorNum + ": Currently on floor " + currFloor + " with requests " + reqFloor.toString() + ", ";
 		
 		if (movingUp) 
-			status += "currently moving up.";
+			status += "moving up.";
 		else if (movingDown) 
-			status += "currently moving down.";
+			status += "moving down.";
 		else
-			status += "currently idle.";
+			status += "idle.";
 	}
 	
 	/**

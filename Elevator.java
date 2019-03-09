@@ -78,7 +78,7 @@ public class Elevator extends Thread {
 		while (true) {
 			if (!reqFloors.isEmpty()) {
 				print("Elevator " + elevatorNum + ": " + reqFloors.toString());
-				moveToNextFloor();
+				moveOneFloor();
 			}
 			
 			try {
@@ -112,8 +112,6 @@ public class Elevator extends Thread {
 			e1.printStackTrace();
 		}
 
-		processSend();
-
 		// Send the datagram packet to the client via the send socket.
 		try {
 			sendSocket.send(sendPacket);
@@ -121,16 +119,15 @@ public class Elevator extends Thread {
 			e.printStackTrace();
 			System.exit(1);
 		}
-
-		print("Elevator: " + elevatorNum + ": Packet sent to scheduler.\n");
-
+		
+		processSend();
 	}
 	
 	/**
 	 * Process the sent packet
 	 */
 	public void processSend() {
-		print("Elevator " + elevatorNum + ": Sending packet to scheduler.");
+		print("Elevator " + elevatorNum + ": Sent packet to scheduler.");
 		/*
 		print("To host: Scheduler");
 		print("Destination host port: " + sendPacket.getPort());
@@ -184,6 +181,7 @@ public class Elevator extends Thread {
 		return (!movingUp && !movingDown);
 	}
 	
+	
 	/**
 	 * Move the elevator the requested floor
 	 * @param floorNum requested floor
@@ -203,7 +201,12 @@ public class Elevator extends Thread {
 		
 		while (currFloor != floorNum) {
 			moveOneFloor();
+			
+			if (currFloor == floorNum)
+				break;
 		}
+		
+		
 			
 		print("Elevator " + elevatorNum +
 				": arrived at floor " + currFloor + ".\n");
@@ -247,7 +250,7 @@ public class Elevator extends Thread {
 	 */
 	public void openDoor() {
 		doorOpen = true;
-		print("Elevator " + elevatorNum + ": opening doors.\n");
+		print("Elevator " + elevatorNum + ": doors opened.\n");
 		simulateWait(2000);
 	}
 	
@@ -256,7 +259,7 @@ public class Elevator extends Thread {
 	 */
 	public void closeDoor() {
 		doorOpen = false;
-		print("Elevator " + elevatorNum + ": closing doors.\n");
+		print("Elevator " + elevatorNum + ": doors closed.\n");
 		simulateWait(2000);
 	}
 	
@@ -268,7 +271,7 @@ public class Elevator extends Thread {
 		reqFloors.removeAll(receivedRequests);
 		reqFloors.addAll(receivedRequests);
 		//Collections.sort(reqFloors);
-		print("Elevator " + elevatorNum + ": " + reqFloors.toString());
+		//print("Elevator " + elevatorNum + ": " + reqFloors.toString());
 		
 		send(getElevatorData());
 		
