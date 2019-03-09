@@ -12,6 +12,7 @@ public class ElevatorData implements Serializable {
 	private ArrayList<Integer> reqFloor; //the requested floors
 	private boolean movingUp; //true if elevator is moving up, false otherwise
 	private boolean movingDown; //true if elevator is moving down, false otherwise
+	private boolean doorOpened;
 	private String status; 
 	
 	/**
@@ -84,6 +85,11 @@ public class ElevatorData implements Serializable {
 			return true;
 		return false;
 	}
+	
+	public boolean doorOpened() {
+		return doorOpened;
+	}
+	
 	
 	/**
 	 * Sets the elevator's status

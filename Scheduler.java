@@ -307,26 +307,26 @@ public class Scheduler {
 	public void manageElevators() {
 		ElevatorData e = elevDat;
 		SchedulerData s = null;
-		// If elevator is on a requested floor, stop and open doors
-		if (e.getRequestedFloors().contains(new Integer(e.getCurrentFloor()))) {
+		// If elevator is on the current requested floor, stop and open doors
+		if (e.getCurrentFloor() == e.getRequestedFloors().get(0) && !e.doorOpened()) {
 			s = new SchedulerData(e.getElevatorNumber(), SchedulerData.MOVE_REQUEST, false, false, true);
 		}
 
 		else {
 			// If elevator is above floor, move down, close doors
-			if (e.getCurrentFloor() > e.getRequestedFloors().get(0)) {
+			if (e.getCurrentFloor() > e.getRequestedFloors().get(0) && !e.isIdle()) {
 				s = new SchedulerData(e.getElevatorNumber(), SchedulerData.MOVE_REQUEST, false, true,
 						false);
 			}
 			// If elevator is below floor, move up, close doors
-			else if (e.getCurrentFloor() < e.getRequestedFloors().get(0)) {
+			else if (e.getCurrentFloor() < e.getRequestedFloors().get(0) && !e.isIdle()) {
 				s = new SchedulerData(e.getElevatorNumber(), SchedulerData.MOVE_REQUEST, true, false,
 						false);
 			}
 
 		}
-		
-		elevatorSend(s);
+		if (s != null)
+			elevatorSend(s);
 	}
 
 	/**
