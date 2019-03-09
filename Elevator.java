@@ -260,8 +260,10 @@ public class Elevator extends Thread {
 				moveStop();
 			
 
-			if (s.doorOpen() && !doorOpen)
+			if (s.doorOpen() && !doorOpen) {
+				print("TEST DOOR OPEN");
 				openDoor();
+			}
 			else if (!s.doorOpen() && doorOpen) 
 				closeDoor();
 		}
@@ -272,7 +274,7 @@ public class Elevator extends Thread {
 	 * @return this elevator's data
 	 */
 	public ElevatorData getElevatorData() {
-		return new ElevatorData(elevatorNum, currFloor, reqFloors, movingUp, movingDown);
+		return new ElevatorData(elevatorNum, currFloor, reqFloors, movingUp, movingDown, doorOpen);
 	}
 
 	/**

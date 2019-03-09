@@ -71,7 +71,7 @@ public class Scheduler {
 		elevDataList = new ElevatorData[numElevators];
 		for (int i = 0; i < numElevators; i++) {
 			// Assume same starting position as set in elevator subsystem
-			elevDataList[i] = new ElevatorData(i, 1, new ArrayList<Integer>(), false, false);
+			elevDataList[i] = new ElevatorData(i, 1, new ArrayList<Integer>(), false, false, false);
 		}
 
 	}
@@ -309,6 +309,7 @@ public class Scheduler {
 		SchedulerData s = null;
 		// If elevator is on the current requested floor, stop and open doors
 		if (e.getCurrentFloor() == e.getRequestedFloors().get(0) && !e.doorOpened()) {
+			print("TEST DOOR OPEN");
 			s = new SchedulerData(e.getElevatorNumber(), SchedulerData.MOVE_REQUEST, false, false, true);
 		}
 
