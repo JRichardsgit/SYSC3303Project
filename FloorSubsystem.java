@@ -218,38 +218,38 @@ public class FloorSubsystem {
 		//c.getFloor(1).pressUp();
 		//c.send(c.getFloor(1).getFloorData());
 
-		c.getFloor(1).pressUp();
-		c.send(c.getFloor(1).getFloorData());
-
-		try {
-			Thread.sleep(25000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		c.getFloor(4).pressDown();
+		c.getFloor(4).pressUp();
 		c.send(c.getFloor(4).getFloorData());
 
-		try {
-			Thread.sleep(25000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		c.getFloor(1).pressUp();
-		c.send(c.getFloor(1).getFloorData());
-		
-		try {
-			Thread.sleep(25000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		c.getFloor(2).pressUp();
-		c.send(c.getFloor(2).getFloorData());
+//		try {
+//			Thread.sleep(25000);
+//		} catch (InterruptedException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		
+//		c.getFloor(3).pressDown();
+//		c.send(c.getFloor(3).getFloorData());
+//
+//		try {
+//			Thread.sleep(25000);
+//		} catch (InterruptedException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//
+//		c.getFloor(1).pressUp();
+//		c.send(c.getFloor(1).getFloorData());
+//		
+//		try {
+//			Thread.sleep(25000);
+//		} catch (InterruptedException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//
+//		c.getFloor(2).pressUp();
+//		c.send(c.getFloor(2).getFloorData());
 
 		c.closeSocket();
 	}

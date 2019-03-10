@@ -90,7 +90,7 @@ public class ElevatorSubsystem {
 			e.printStackTrace();
 		}
 
-		//processReceive();
+		processReceive();
 	}
 
 	/**
@@ -98,7 +98,7 @@ public class ElevatorSubsystem {
 	 */
 	public void processReceive() {
 		// Process the received datagram.
-		print("ElevatorSubsystem: Packet received:");
+		print("\nELEVATOR SUBSYSTEM: Packet received. \n");
 		/*
 		print("From host: " + receivePacket.getAddress());
 		print("Host port: " + receivePacket.getPort());
@@ -147,7 +147,12 @@ public class ElevatorSubsystem {
 	}
 	
 	public void routePacket() {
-		getElevator(scheDat.getElevatorNumber()).receiveRequest(scheDat);
+		
+		Elevator routedElevator = getElevator(scheDat.getElevatorNumber());
+		print("ELEVATOR SUBSYSTEM: routing to elevator " + scheDat.getElevatorNumber());
+		
+		//routedElevator.wake();
+		routedElevator.receiveRequest(scheDat);
 	}
 	
 	/**

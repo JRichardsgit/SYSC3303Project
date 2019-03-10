@@ -79,7 +79,8 @@ public class Elevator extends Thread {
 			if (!reqFloors.isEmpty()) {
 				moveOneFloor();
 			}
-
+			
+		
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {
@@ -134,6 +135,24 @@ public class Elevator extends Thread {
 		 */
 		print("Containing: \n" + getElevatorData().getStatus() + "\n");
 	}
+	
+	/**
+     * Tell this thread to wait
+     */
+    public synchronized void pause() {
+    	try {
+    		this.wait();
+    	} catch (Exception e) {}
+    }
+    
+    /**
+     * Notify this thread
+     */
+    public synchronized void wake() {
+    	try {
+    		this.notify();
+    	} catch (Exception e) {}
+    }
 
 	/**
 	 * Set flags for motor moving the elevator up
@@ -188,18 +207,24 @@ public class Elevator extends Thread {
 	public void moveOneFloor() {
 		
 		if (isMovingUp()) {
-			print("Elevator " + elevatorNum + ": currently on floor " + currFloor + ".");
+			print("Elevator " + elevatorNum + ": currently on floor " + currFloor + ", moving up.");
 			currFloor ++;
-			simulateWait(1000);
+			//simulateWait(1000);
+			//Update scheduler
+			send(getElevatorData());
+			//pause();
+			
+		}
+		else if (isMovingDown()) {
+			print("Elevator " + elevatorNum + ": currently on floor " + currFloor + ", moving down.");
+			currFloor --;
+			//simulateWait(1000);
 			//Update scheduler
 			send(getElevatorData());
 		}
-		else if (isMovingDown()) {
-			print("Elevator " + elevatorNum + ": currently on floor " + currFloor + ".");
-			currFloor --;
-			simulateWait(1000);
-			//Update scheduler
-			send(getElevatorData());
+		
+		else {
+			
 		}
 	}
 
@@ -251,14 +276,21 @@ public class Elevator extends Thread {
 			reqFloors.addAll(s.getReqFloors());
 			//Collections.sort(reqFloors);
 			send(getElevatorData());
+			//pause();
 		}
 		else {
-			if (s.moveUp())
+			if (s.moveUp()) {
+				//print("Elevator " + elevatorNum + ": now moving up.");
 				moveUp();
-			else if (s.moveDown())
+			}
+			else if (s.moveDown()) {
+				//print("Elevator " + elevatorNum + ": now moving down.");
 				moveDown();
-			else if (s.stop()) 
+			}
+			else if (s.stop())  {
+				//print("Elevator " + elevatorNum + ": now stopping.");
 				moveStop();
+			}
 			
 
 			if (s.doorOpen() && !doorOpen) {

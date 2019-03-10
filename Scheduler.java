@@ -56,10 +56,10 @@ public class Scheduler {
 			receiveSocket = new DatagramSocket(3000);
 
 			// to test socket timeout (2 seconds)
-			receiveSocket.setSoTimeout(25000);
-			
+			//receiveSocket.setSoTimeout(25000);
+
 		} catch (SocketException se) {
-			
+
 		}
 
 		receiveQueue = new ArrayList<DatagramPacket>();
@@ -153,31 +153,33 @@ public class Scheduler {
 
 		try {
 			// Retrieve the ElevatorData object from the receive packet
+			if (!receiveQueue.isEmpty()) {
+				for (DatagramPacket dPacket : receiveQueue) {
+					ByteArrayInputStream byteStream = new ByteArrayInputStream(dPacket.getData());
+					ObjectInputStream is;
+					is = new ObjectInputStream(new BufferedInputStream(byteStream));
+					Object o = is.readObject();
+					is.close();
 
-			for (DatagramPacket dPacket : receiveQueue) {
-				ByteArrayInputStream byteStream = new ByteArrayInputStream(dPacket.getData());
-				ObjectInputStream is;
-				is = new ObjectInputStream(new BufferedInputStream(byteStream));
-				Object o = is.readObject();
-				is.close();
+					if (o instanceof FloorData) {
+						floorDat = (FloorData) o;
+						processFloorReceived();
 
-				if (o instanceof FloorData) {
-					floorDat = (FloorData) o;
-					processFloorReceived();
+						updateRequests();
+						routeElevator();
+						elevatorSend(getSchedulerData());
+						clearRequest();
+					} else {
+						elevDat = (ElevatorData) o;
+						processElevatorReceived();
 
-					updateRequests();
-					routeElevator();
-					elevatorSend(getSchedulerData());
-					clearRequest();
-				} else {
-					elevDat = (ElevatorData) o;
-					processElevatorReceived();
-
-					elevDataList[elevDat.getElevatorNumber()] = elevDat;
-					manageElevators();
+						elevDataList[elevDat.getElevatorNumber()] = elevDat;
+						manageElevators();
+						displayElevatorStates();
+					}
 				}
 			}
-			
+
 			receiveQueue.clear();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -187,7 +189,7 @@ public class Scheduler {
 			e.printStackTrace();
 		}
 
-		displayElevatorStates();
+		
 	}
 
 	/**
@@ -310,17 +312,20 @@ public class Scheduler {
 		SchedulerData s = null;
 		// If elevator is on the current requested floor, stop and open doors
 		if (e.getCurrentFloor() == e.getRequestedFloors().get(0) && !e.doorOpened()) {
+			print("SIGNAL STOP to elevator: " + e.getElevatorNumber());
 			s = new SchedulerData(e.getElevatorNumber(), SchedulerData.MOVE_REQUEST, false, false, true);
 		}
 
 		else {
 			// If elevator is above floor, move down, close doors
 			if (e.getCurrentFloor() > e.getRequestedFloors().get(0) && e.isIdle()) {
+				print("SIGNAL MOVE DOWN to elevator: " + e.getElevatorNumber());
 				s = new SchedulerData(e.getElevatorNumber(), SchedulerData.MOVE_REQUEST, false, true,
 						false);
 			}
 			// If elevator is below floor, move up, close doors
 			else if (e.getCurrentFloor() < e.getRequestedFloors().get(0) && e.isIdle()) {
+				print("SIGNAL MOVE UP to elevator: " + e.getElevatorNumber());
 				s = new SchedulerData(e.getElevatorNumber(), SchedulerData.MOVE_REQUEST, true, false,
 						false);
 			}
