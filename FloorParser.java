@@ -11,23 +11,25 @@ public class FloorParser{
 	public int ReqFloor = 0;
 	public boolean ReqDirection = false;
 	public int ReqDestFloor = 0;
-	public String[][] instructions= new String[5][4];
-	private int fields = 4;
+	private int fields = 4;						//# of fields per instruction
+	private int requests = 5;					//# of instructions on the text file
+	public String[][] instructions= new String[requests][fields];
+	
 			
 
 
 	public void Parse(String file) throws FileNotFoundException {
 		String[] str = new String[fields];
 		String filename = file +".txt";
-		File events = new File("C:\\Users\\JRich\\Documents\\" + filename); // FIX ME: change path to accept github 
-		Scanner scan = new Scanner(events); // create new scanner
-		for(int j =0; scan.hasNext();j++) { //format instructions int 2D array. j = instruction #, i = instruction type
+		File events = new File("C:\\Users\\JRich\\Documents\\" + filename); 	// FIX ME: change path to accept github 
+		Scanner scan = new Scanner(events); 					// create new scanner
+		for(int j =0; scan.hasNext();j++) { 					//format instructions int 2D array. j = instruction #, i = instruction type
 			for(int i =0; i<fields;i++) {
 				str[i] = scan.next();
 				instructions[j][i] = str[i];
 				}
 		}
-		scan.close(); // close scanner
+		scan.close(); 								// close scanner
 		
 		
 		// print parsed instructions//
@@ -39,7 +41,6 @@ public class FloorParser{
 			}
 		}	
 	}
-	
 	
 	public String getTime(int instructionNum) {
 		return instructions[instructionNum][0];
@@ -53,7 +54,7 @@ public class FloorParser{
 		return ReqDestFloor = Integer.parseInt(instructions[instructionNum][3]);
 	}
 	
-	public boolean getDirection(int instructionNum) {
+	public boolean getDirection(int instructionNum) {	//return direction of instruction bool(true = up/false=down)
 		
 		if (instructions[instructionNum][2] == "up") 
 			ReqDirection = true;
@@ -63,13 +64,13 @@ public class FloorParser{
 		
 		return ReqDirection;
 	}
-	public String getSysTime() {
+	public String getSysTime() { 				//get system time as a string to compare to instruction times
 		String timeStamp = new SimpleDateFormat("HH:mm:ss:SS").format(System.currentTimeMillis());
 		return timeStamp;
 	}
 	public void dispatch(int numFloors) {
 		
-		Queue<String> q1Up = new LinkedList<>();
+		Queue<String> q1Up = new LinkedList<>();	//Create queues for each floor
 		Queue<String> q2Up = new LinkedList<>();
 		Queue<String> q2Down = new LinkedList<>();
 		Queue<String> q3Up = new LinkedList<>();
@@ -77,9 +78,9 @@ public class FloorParser{
 		Queue<String> q4Down = new LinkedList<>();
 
 		
-		for(int j=0;j < instructions.length;j++) {
-			if (instructions[j][0]==this.getSysTime()) {
-				if (getFloor(j) == 1) {
+		for(int j=0;j < requests; j++) {     		// iterate through instructions
+			if (instructions[j][0]==this.getSysTime()) {	//Compare instruction time to current time
+				if (getFloor(j) == 1) {			//logic to place instructions in appropriate queues
 					q1Up.add(instructions[j][0]);
 					q1Up.add(instructions[j][3]);
 				}
