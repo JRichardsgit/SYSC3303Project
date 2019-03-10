@@ -10,8 +10,10 @@ import java.util.ArrayList;
 public class Scheduler {
 
 	// Packets and Sockets
-	DatagramPacket floorSendPacket, elevatorSendPacket, floorReceivePacket, elevatorReceivePacket, receivePacket;
-	DatagramSocket sendSocket, floorReceiveSocket, elevatorReceiveSocket, receiveSocket;
+	DatagramPacket floorSendPacket, elevatorSendPacket, receivePacket;
+	DatagramSocket sendSocket, receiveSocket;
+
+	ArrayList<DatagramPacket> receiveQueue;
 
 	// Send switch
 	boolean sendElevator;
@@ -54,11 +56,13 @@ public class Scheduler {
 			receiveSocket = new DatagramSocket(3000);
 
 			// to test socket timeout (2 seconds)
-			// receiveSocket.setSoTimeout(2000);
+			receiveSocket.setSoTimeout(25000);
+			
 		} catch (SocketException se) {
-			se.printStackTrace();
-			System.exit(1);
+			
 		}
+
+		receiveQueue = new ArrayList<DatagramPacket>();
 
 		this.numFloors = numFloors;
 		floorLamps = new boolean[numFloors];
@@ -82,8 +86,7 @@ public class Scheduler {
 	public void closeSockets() {
 		// We're finished, so close the sockets.
 		sendSocket.close();
-		floorReceiveSocket.close();
-		elevatorReceiveSocket.close();
+		receiveSocket.close();
 	}
 
 	/**
@@ -106,8 +109,8 @@ public class Scheduler {
 			ooStream.flush();
 			byte msg[] = baoStream.toByteArray();
 
-			floorSendPacket = new DatagramPacket(msg, msg.length, floorReceivePacket.getAddress(),
-					floorReceivePacket.getPort());
+			floorSendPacket = new DatagramPacket(msg, msg.length, receivePacket.getAddress(),
+					receivePacket.getPort());
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -137,31 +140,45 @@ public class Scheduler {
 		try {
 			// print("Waiting..."); // so we know we're waiting
 			receiveSocket.receive(receivePacket);
+			receiveQueue.add(receivePacket);
 		} catch (IOException e) {
 			print("IO Exception: likely:");
 			print("Receive Socket Timed Out.\n" + e);
 			e.printStackTrace();
 			System.exit(1);
 		}
+	}
+
+	public void processAndSend() {
 
 		try {
 			// Retrieve the ElevatorData object from the receive packet
-			ByteArrayInputStream byteStream = new ByteArrayInputStream(data);
-			ObjectInputStream is;
-			is = new ObjectInputStream(new BufferedInputStream(byteStream));
-			Object o = is.readObject();
-			is.close();
 
-			if (o instanceof FloorData) {
-				floorDat = (FloorData) o;
-				processFloorReceived();
-				sendElevator = true;
-			} else {
-				elevDat = (ElevatorData) o;
-				processElevatorReceived();
-				sendElevator = false;
+			for (DatagramPacket dPacket : receiveQueue) {
+				ByteArrayInputStream byteStream = new ByteArrayInputStream(dPacket.getData());
+				ObjectInputStream is;
+				is = new ObjectInputStream(new BufferedInputStream(byteStream));
+				Object o = is.readObject();
+				is.close();
+
+				if (o instanceof FloorData) {
+					floorDat = (FloorData) o;
+					processFloorReceived();
+
+					updateRequests();
+					routeElevator();
+					elevatorSend(getSchedulerData());
+					clearRequest();
+				} else {
+					elevDat = (ElevatorData) o;
+					processElevatorReceived();
+
+					elevDataList[elevDat.getElevatorNumber()] = elevDat;
+					manageElevators();
+				}
 			}
-
+			
+			receiveQueue.clear();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -169,23 +186,7 @@ public class Scheduler {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	}
 
-	public void processAndSend() {
-		// Route to elevator
-		if (sendElevator) {
-			updateRequests();
-			routeElevator();
-			elevatorSend(getSchedulerData());
-			clearRequest();
-		}
-
-		// Update elevator states
-		else {
-			elevDataList[elevDat.getElevatorNumber()] = elevDat;
-			manageElevators();
-		}
-	
 		displayElevatorStates();
 	}
 
@@ -231,10 +232,10 @@ public class Scheduler {
 	 */
 	public void processFloorReceived() {
 		print("Scheduler: Packet received."); /*
-												 * print("From FloorSubsystem: " + receivePacket.getAddress());
-												 * print("Host port: " + receivePacket.getPort());
-												 * print("Packet Length: " + receivePacket.getLength());
-												 */
+		 * print("From FloorSubsystem: " + receivePacket.getAddress());
+		 * print("Host port: " + receivePacket.getPort());
+		 * print("Packet Length: " + receivePacket.getLength());
+		 */
 		print("Containing: \n" + floorDat.getStatus() + "\n");
 	}
 
@@ -243,10 +244,10 @@ public class Scheduler {
 	 */
 	public void processElevatorReceived() {
 		print("Scheduler: Packet received."); /*
-												 * print("From ElevatorSubsystem: " + receivePacket.getAddress());
-												 * print("Host port: " + receivePacket.getPort());
-												 * print("Packet length: " + receivePacket.getLength());
-												 */
+		 * print("From ElevatorSubsystem: " + receivePacket.getAddress());
+		 * print("Host port: " + receivePacket.getPort());
+		 * print("Packet length: " + receivePacket.getLength());
+		 */
 		print("Containing: \n" + elevDat.getStatus() + "\n");
 	}
 
@@ -277,10 +278,10 @@ public class Scheduler {
 	/**
 	 * Wait 5 seconds
 	 */
-	public void wait5s() {
+	public void waitTime(int ms) {
 		// Slow things down (wait 5 seconds)
 		try {
-			Thread.sleep(8000);
+			Thread.sleep(ms);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -489,6 +490,7 @@ public class Scheduler {
 		while (true) {
 			c.receive();
 			c.processAndSend();
+			c.waitTime(1000);
 			/*
 			 * // Receive a request from a floor c.floorReceive(); // Update current data
 			 * c.updateRequests();

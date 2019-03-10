@@ -172,8 +172,10 @@ public class Elevator extends Thread {
 		movingUp = false;
 		movingDown = false;
 		
-		print("Elevator " + elevatorNum + ": arrived at floor " + currFloor + ".\n");
-		reqFloors.remove(0);
+		if (!reqFloors.isEmpty()) {
+			print("Elevator " + elevatorNum + ": arrived at floor " + currFloor + ".\n");
+			reqFloors.remove(0);
+		}
 	}
 
 	/**
@@ -188,14 +190,14 @@ public class Elevator extends Thread {
 		if (isMovingUp()) {
 			print("Elevator " + elevatorNum + ": currently on floor " + currFloor + ".");
 			currFloor ++;
-			simulateWait(3000);
+			simulateWait(1000);
 			//Update scheduler
 			send(getElevatorData());
 		}
 		else if (isMovingDown()) {
 			print("Elevator " + elevatorNum + ": currently on floor " + currFloor + ".");
 			currFloor --;
-			simulateWait(3000);
+			simulateWait(1000);
 			//Update scheduler
 			send(getElevatorData());
 		}
