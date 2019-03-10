@@ -173,6 +173,8 @@ public class ElevatorSubsystem {
 		 * Elevator subsystem logic
 		 */
 		
+		
+		
 		while(true) {
 			c.receive();
 			c.routePacket();
@@ -182,6 +184,8 @@ public class ElevatorSubsystem {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			
+			
 		}
 
 	}

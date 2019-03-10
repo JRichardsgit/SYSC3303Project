@@ -37,6 +37,7 @@ public class SchedulerData implements Serializable {
 		this.elevatorNum = elevatorNum;
 		this.moveUp = moveUp;
 		this.moveDown = moveDown;
+		this.doorOpen = doorOpen;
 	}
 	
 	/**

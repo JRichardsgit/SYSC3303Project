@@ -261,11 +261,12 @@ public class Elevator extends Thread {
 			
 
 			if (s.doorOpen() && !doorOpen) {
-				print("TEST DOOR OPEN");
 				openDoor();
 			}
-			else if (!s.doorOpen() && doorOpen) 
+			else if (!s.doorOpen() && doorOpen) {
 				closeDoor();
+			}
+				
 		}
 	}
 

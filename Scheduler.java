@@ -185,7 +185,7 @@ public class Scheduler {
 			elevDataList[elevDat.getElevatorNumber()] = elevDat;
 			manageElevators();
 		}
-
+	
 		displayElevatorStates();
 	}
 
@@ -299,7 +299,7 @@ public class Scheduler {
 		print("ELEVATOR STATUS:");
 		for (ElevatorData e : elevDataList) {
 			print("	Elevator " + e.getElevatorNumber() + " : current floor - " + e.getCurrentFloor() + " , requests "
-					+ e.getRequestedFloors().toString());
+					+ e.getRequestedFloors().toString() + " , doorOpen = " + e.doorOpened());
 		}
 		print("\n");
 	}
@@ -309,18 +309,17 @@ public class Scheduler {
 		SchedulerData s = null;
 		// If elevator is on the current requested floor, stop and open doors
 		if (e.getCurrentFloor() == e.getRequestedFloors().get(0) && !e.doorOpened()) {
-			print("TEST DOOR OPEN");
 			s = new SchedulerData(e.getElevatorNumber(), SchedulerData.MOVE_REQUEST, false, false, true);
 		}
 
 		else {
 			// If elevator is above floor, move down, close doors
-			if (e.getCurrentFloor() > e.getRequestedFloors().get(0) && !e.isIdle()) {
+			if (e.getCurrentFloor() > e.getRequestedFloors().get(0) && e.isIdle()) {
 				s = new SchedulerData(e.getElevatorNumber(), SchedulerData.MOVE_REQUEST, false, true,
 						false);
 			}
 			// If elevator is below floor, move up, close doors
-			else if (e.getCurrentFloor() < e.getRequestedFloors().get(0) && !e.isIdle()) {
+			else if (e.getCurrentFloor() < e.getRequestedFloors().get(0) && e.isIdle()) {
 				s = new SchedulerData(e.getElevatorNumber(), SchedulerData.MOVE_REQUEST, true, false,
 						false);
 			}
