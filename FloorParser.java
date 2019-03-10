@@ -13,7 +13,14 @@ public class FloorParser{
 	public int ReqDestFloor = 0;
 	private int fields = 4;						//# of fields per instruction
 	private int requests = 5;					//# of instructions on the text file
-	public String[][] instructions= new String[requests][fields];
+	public String[][] instructions= new String[requests][fields];	//2D array that stores the instructions
+	public Queue<String> q1Up = new LinkedList<>();			//Create queues for each floor
+	public Queue<String> q2Up = new LinkedList<>();
+	public Queue<String> q2Down = new LinkedList<>();
+	public Queue<String> q3Up = new LinkedList<>();
+	public Queue<String> q3Down = new LinkedList<>();
+	public Queue<String> q4Down = new LinkedList<>();
+
 	
 			
 
@@ -56,12 +63,13 @@ public class FloorParser{
 	
 	public boolean getDirection(int instructionNum) {	//return direction of instruction bool(true = up/false=down)
 		
-		if (instructions[instructionNum][2] == "up") 
+		if (instructions[instructionNum][2].equals("up")) 
 			ReqDirection = true;
 			
-		else  
+		else if (instructions[instructionNum][2].equals("down")) 
 				ReqDirection = false;
-		
+		else	
+			System.out.println("Incorrect Direction")
 		return ReqDirection;
 	}
 	public String getSysTime() { 				//get system time as a string to compare to instruction times
@@ -70,46 +78,38 @@ public class FloorParser{
 	}
 	public void dispatch(int numFloors) {
 		
-		Queue<String> q1Up = new LinkedList<>();	//Create queues for each floor
-		Queue<String> q2Up = new LinkedList<>();
-		Queue<String> q2Down = new LinkedList<>();
-		Queue<String> q3Up = new LinkedList<>();
-		Queue<String> q3Down = new LinkedList<>();
-		Queue<String> q4Down = new LinkedList<>();
-
-		
-		for(int j=0;j < requests; j++) {     		// iterate through instructions
-			if (instructions[j][0]==this.getSysTime()) {	//Compare instruction time to current time
+		for(int j=0;j < requests; j++) {     			// iterate through instructions
+			//if (instructions[j][0]==this.getSysTime()) {	//Compare instruction time to current time **Not Sure if working correctly**
 				if (getFloor(j) == 1) {			//logic to place instructions in appropriate queues
-					q1Up.add(instructions[j][0]);
-					q1Up.add(instructions[j][3]);
+					this.q1Up.add(instructions[j][0]);
+					this.q1Up.add(instructions[j][3]);
 				}
 				else if (getFloor(j) == 2) {
 					if(getDirection(j)) {
-						q2Up.add(instructions[j][0]);
-						q2Up.add(instructions[j][3]);
+						this.q2Up.add(instructions[j][0]);
+						this.q2Up.add(instructions[j][3]);
 					}
 					else {
-						q2Down.add(instructions[j][0]);
-						q2Down.add(instructions[j][3]);
+						this.q2Down.add(instructions[j][0]);
+						this.q2Down.add(instructions[j][3]);
 					}
 				}
 				else if(getFloor(j) == 3) {
 					if(getDirection(j)) {
-						q3Up.add(instructions[j][0]);
-						q3Up.add(instructions[j][3]);
+						this.q3Up.add(instructions[j][0]);
+						this.q3Up.add(instructions[j][3]);
 					}
 					else {
-						q3Down.add(instructions[j][0]);
-						q3Down.add(instructions[j][3]);
+						this.q3Down.add(instructions[j][0]);
+						this.q3Down.add(instructions[j][3]);
 					}
 				}
 				else {
-					q4Down.add(instructions[j][0]);
-					q4Down.add(instructions[j][3]);
+					this.q4Down.add(instructions[j][0]);
+					this.q4Down.add(instructions[j][3]);
 				}
 			}
-		}
+		//}
 		
 	}
 	
