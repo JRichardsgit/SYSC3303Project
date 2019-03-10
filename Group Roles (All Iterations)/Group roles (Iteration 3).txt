@@ -1,0 +1,7 @@
+Group Roles for Iteration 3
+
+Gabriel - Made group role file on github, reviewed sequenced diagram for errors.
+Akash - Sequence/Timing diagrams for the error scenarios of the elevator system
+Jolar - Test Cases, Coding, Data structures
+Ryan - UML Diagram, Test cases, Debuging
+James - Input file
