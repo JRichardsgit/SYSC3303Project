@@ -77,7 +77,6 @@ public class Elevator extends Thread {
 
 		while (true) {
 			if (!reqFloors.isEmpty()) {
-				
 				moveOneFloor();
 			}
 
@@ -174,6 +173,7 @@ public class Elevator extends Thread {
 		movingDown = false;
 		
 		print("Elevator " + elevatorNum + ": arrived at floor " + currFloor + ".\n");
+		reqFloors.remove(0);
 	}
 
 	/**
@@ -184,7 +184,6 @@ public class Elevator extends Thread {
 	}
 
 	public void moveOneFloor() {
-		
 		
 		if (isMovingUp()) {
 			print("Elevator " + elevatorNum + ": currently on floor " + currFloor + ".");

@@ -32,11 +32,11 @@ public class ElevatorData implements Serializable {
 		status = "Elevator " + elevatorNum + ": Currently on floor " + currFloor + " with requests " + reqFloor.toString() + ", ";
 		
 		if (movingUp) 
-			status += "moving up.";
+			status += "moving up";
 		else if (movingDown) 
-			status += "moving down.";
+			status += "moving down";
 		else
-			status += "idle.";
+			status += "idle";
 		
 		status += ", doorOpen = " + doorOpened;
 	}

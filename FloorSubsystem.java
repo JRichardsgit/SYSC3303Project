@@ -222,7 +222,7 @@ public class FloorSubsystem {
 		c.send(c.getFloor(1).getFloorData());
 
 		try {
-			Thread.sleep(10000);
+			Thread.sleep(25000);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -232,7 +232,7 @@ public class FloorSubsystem {
 		c.send(c.getFloor(4).getFloorData());
 
 		try {
-			Thread.sleep(10000);
+			Thread.sleep(25000);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -242,7 +242,7 @@ public class FloorSubsystem {
 		c.send(c.getFloor(1).getFloorData());
 		
 		try {
-			Thread.sleep(10000);
+			Thread.sleep(25000);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
