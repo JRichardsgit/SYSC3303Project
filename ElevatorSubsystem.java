@@ -7,7 +7,7 @@ import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
 
-public class ElevatorSubsystem {
+public class ElevatorSubsystem extends Thread {
 
 	//Sockets and Packets
 	DatagramPacket receivePacket;
@@ -21,7 +21,8 @@ public class ElevatorSubsystem {
 	
 	//List of elevators
 	private Elevator elevatorList[];
-
+	
+	private boolean elevatorPending[];
 	/**
 	 * Create a new elevator subsystem with numElevators
 	 * @param numElevators the number of elevators in the system
@@ -40,12 +41,15 @@ public class ElevatorSubsystem {
 			System.exit(1);
 		}
 		
+		schedulerAddress = null;
 		elevatorList = new Elevator[numElevators];
+		elevatorPending = new boolean[numElevators];
 		
 		for (int i = 0; i < numElevators; i ++) {
 			elevatorList[i] = (new Elevator(i, numFloors, this));
-			elevatorList[i].start();
+			elevatorPending[i] = false;
 			print("Elevator " + i + " started.");
+			elevatorList[i].start();
 		}
 	}
 
@@ -59,12 +63,20 @@ public class ElevatorSubsystem {
 
 		byte data[] = new byte[5000];
 		receivePacket = new DatagramPacket(data, data.length);
-		//print("ElevatorSubsystem: Waiting for Packet.\n");
+		print("Waiting for Packet.\n");
 
 		// Block until a datagram packet is received from receiveSocket.
 		try {
 			//print("Waiting..."); // so we know we're waiting
 			receiveSocket.receive(receivePacket);
+			
+			if (schedulerAddress == null) {
+				schedulerAddress = receivePacket.getAddress();
+				
+				for (Elevator elevator: elevatorList) {
+					elevator.setSchedulerAddress(schedulerAddress);
+				}
+			}
 			
 		} catch (IOException e) {
 			print("IO Exception: likely:");
@@ -90,21 +102,7 @@ public class ElevatorSubsystem {
 			e.printStackTrace();
 		}
 
-		processReceive();
-	}
-
-	/**
-	 * Process the received packet
-	 */
-	public void processReceive() {
-		// Process the received datagram.
-		print("\nELEVATOR SUBSYSTEM: Packet received. \n");
-		/*
-		print("From host: " + receivePacket.getAddress());
-		print("Host port: " + receivePacket.getPort());
-		print("Length: " + receivePacket.getLength());
-		*/
-
+		print("Packet received.");
 	}
 	
 	public InetAddress getSchedulerAddress() {
@@ -129,6 +127,14 @@ public class ElevatorSubsystem {
 		return elevDat;
 	}
 	
+	public void setPending(int elevatorNum, boolean pending) {
+		elevatorPending[elevatorNum] = pending;
+	}
+	
+	public boolean isPending(int elevatorNum) {
+		return elevatorPending[elevatorNum];
+	}
+	
 	/**
 	 * Returns the last received scheduler packet
 	 * @return the last received scheduler packet
@@ -147,11 +153,14 @@ public class ElevatorSubsystem {
 	}
 	
 	public void routePacket() {
+		int routedElevatorNumber = scheDat.getElevatorNumber();
+		Elevator routedElevator = elevatorList[routedElevatorNumber];
 		
-		Elevator routedElevator = getElevator(scheDat.getElevatorNumber());
-		print("ELEVATOR SUBSYSTEM: routing to elevator " + scheDat.getElevatorNumber());
+		print("Routing to Elevator " + routedElevatorNumber + ".\n");
+
+		elevatorPending[routedElevatorNumber] = false;
 		
-		//routedElevator.wake();
+		wait(1000);
 		routedElevator.receiveRequest(scheDat);
 	}
 	
@@ -168,30 +177,32 @@ public class ElevatorSubsystem {
 	 * @param message the message to be printed
 	 */
 	public void print(String message) {
-		System.out.println(message);
+		System.out.println("ELEVATOR SUBSYSTEM: " + message);
 	}
-
-	public static void main(String args[]) {
-		ElevatorSubsystem c = new ElevatorSubsystem(5, 2);
-		
+	
+	public void wait(int ms) {
+		try {
+			Thread.sleep(ms);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public void run() {
 		/**
 		 * Elevator subsystem logic
 		 */
 		
-		
-		
 		while(true) {
-			c.receive();
-			c.routePacket();
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-			
+			receive();
+			routePacket();
 		}
+	}
+	
 
+	public static void main(String args[]) {
+		ElevatorSubsystem c = new ElevatorSubsystem(5, 2);
+		c.start();
 	}
 }

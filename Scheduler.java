@@ -174,8 +174,8 @@ public class Scheduler {
 						processElevatorReceived();
 
 						elevDataList[elevDat.getElevatorNumber()] = elevDat;
-						manageElevators();
 						displayElevatorStates();
+						manageElevators();
 					}
 				}
 			}
@@ -233,24 +233,16 @@ public class Scheduler {
 	 * Process the received floor packet
 	 */
 	public void processFloorReceived() {
-		print("Scheduler: Packet received."); /*
-		 * print("From FloorSubsystem: " + receivePacket.getAddress());
-		 * print("Host port: " + receivePacket.getPort());
-		 * print("Packet Length: " + receivePacket.getLength());
-		 */
-		print("Containing: \n" + floorDat.getStatus() + "\n");
+		print("Scheduler: Packet received.");
+		print("Containing:\n	" + floorDat.getStatus() + "\n");
 	}
 
 	/**
 	 * Process the received elevator packet
 	 */
 	public void processElevatorReceived() {
-		print("Scheduler: Packet received."); /*
-		 * print("From ElevatorSubsystem: " + receivePacket.getAddress());
-		 * print("Host port: " + receivePacket.getPort());
-		 * print("Packet length: " + receivePacket.getLength());
-		 */
-		print("Containing: \n" + elevDat.getStatus() + "\n");
+		print("Scheduler: Packet received.");
+		print("Containing:\n	" + elevDat.getStatus() + "\n");
 	}
 
 	/**
@@ -258,11 +250,6 @@ public class Scheduler {
 	 */
 	public void processElevatorSend() {
 		print("Scheduler: Sent packet to ElevatorSubsystem.");
-		/*
-		 * print("To host: " + elevatorSendPacket.getAddress());
-		 * print("Destination host port: " + 2000); print("Length: " +
-		 * elevatorSendPacket.getLength());
-		 */
 	}
 
 	/**
@@ -270,11 +257,6 @@ public class Scheduler {
 	 */
 	public void processFloorSend() {
 		print("Scheduler: Sent packet to FloorSubsystem.");
-		/*
-		 * print("To host: " + floorSendPacket.getAddress());
-		 * print("Destination host port: " + floorSendPacket.getPort());
-		 * print("Length: " + floorSendPacket.getLength());
-		 */
 	}
 
 	/**
@@ -301,8 +283,7 @@ public class Scheduler {
 	public void displayElevatorStates() {
 		print("ELEVATOR STATUS:");
 		for (ElevatorData e : elevDataList) {
-			print("	Elevator " + e.getElevatorNumber() + " : current floor - " + e.getCurrentFloor() + " , requests "
-					+ e.getRequestedFloors().toString() + " , doorOpen = " + e.doorOpened());
+			print("	" + e.getStatus());
 		}
 		print("\n");
 	}
@@ -311,11 +292,12 @@ public class Scheduler {
 		ElevatorData e = elevDat;
 		SchedulerData s = null;
 		// If elevator is on the current requested floor, stop and open doors
-		if (e.getCurrentFloor() == e.getRequestedFloors().get(0) && !e.doorOpened()) {
-			print("SIGNAL STOP to elevator: " + e.getElevatorNumber());
-			s = new SchedulerData(e.getElevatorNumber(), SchedulerData.MOVE_REQUEST, false, false, true);
+		if (e.getCurrentFloor() == e.getRequestedFloors().get(0) && !e.isIdle()) {
+			print("SIGNAL STOP to Elevator: " + e.getElevatorNumber() + ".");
+			s = new SchedulerData(e.getElevatorNumber(), SchedulerData.STOP_REQUEST, false, false, true);
 		}
 
+		//If elevator has not reached it's current destination
 		else {
 			// If elevator is above floor, move down, close doors
 			if (e.getCurrentFloor() > e.getRequestedFloors().get(0) && e.isIdle()) {
@@ -328,6 +310,11 @@ public class Scheduler {
 				print("SIGNAL MOVE UP to elevator: " + e.getElevatorNumber());
 				s = new SchedulerData(e.getElevatorNumber(), SchedulerData.MOVE_REQUEST, true, false,
 						false);
+			}
+			//If already moving towards destination floor, just tell it to continue
+			else {
+				print("SIGNAL CONTINUE to elevator: " + e.getElevatorNumber());
+				s = new SchedulerData(e.getElevatorNumber(), SchedulerData.CONTINUE_REQUEST);
 			}
 
 		}

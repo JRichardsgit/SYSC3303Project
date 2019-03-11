@@ -11,6 +11,8 @@ import java.util.ArrayList;
 public class SchedulerData implements Serializable {
 	public final static int FLOOR_REQUEST = 0;
 	public final static int MOVE_REQUEST = 1;
+	public final static int CONTINUE_REQUEST = 2;
+	public final static int STOP_REQUEST = 3;
 	
 
 	private final int mode;
@@ -38,6 +40,11 @@ public class SchedulerData implements Serializable {
 		this.moveUp = moveUp;
 		this.moveDown = moveDown;
 		this.doorOpen = doorOpen;
+	}
+	
+	public SchedulerData(int elevatorNum, int mode) {
+		this.elevatorNum = elevatorNum;
+		this.mode = mode;
 	}
 	
 	/**
