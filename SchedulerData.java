@@ -8,10 +8,11 @@ import java.util.ArrayList;
  */
 public class SchedulerData implements Serializable {
 	//CONSTANTS FOR REQUEST MODES
-	public final static int FLOOR_REQUEST = 0;
-	public final static int MOVE_REQUEST = 1;
-	public final static int CONTINUE_REQUEST = 2;
+	public final static int CONTINUE_REQUEST = 0;
+	public final static int FLOOR_REQUEST = 1;
+	public final static int MOVE_REQUEST = 2;
 	public final static int STOP_REQUEST = 3;
+	public final static int DOOR_REQUEST = 4;
 	
 
 	private final int mode; //the request mode 
@@ -54,7 +55,7 @@ public class SchedulerData implements Serializable {
 	}
 	
 	/**
-	 * Constructor signature for CONTINUE requests
+	 * Constructor signature for CONTINUE/DOOR requests
 	 * @param elevatorNum
 	 * @param mode
 	 */

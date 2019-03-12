@@ -26,13 +26,17 @@ public class ElevatorSubsystem extends Thread {
 	private Elevator elevatorList[];
 	
 	//To check if an elevator should be waiting for a request
-	private boolean elevatorPending[];
+	//private boolean elevatorPending[];
+	
+	//Error List
+	private ArrayList<ErrorEvent> errorList;
 	
 	/**
 	 * Create a new elevator subsystem with numElevators
 	 * @param numElevators the number of elevators in the system
 	 */
 	public ElevatorSubsystem( int numFloors, int numElevators) {
+		/*
 		try {
 			// Construct a datagram socket and bind it to port 2000
 			// on the local host machine. This socket will be used to
@@ -43,71 +47,73 @@ public class ElevatorSubsystem extends Thread {
 			se.printStackTrace();
 			System.exit(1);
 		}
+		*/
 		
 		schedulerAddress = null;
 		elevatorList = new Elevator[numElevators];
-		elevatorPending = new boolean[numElevators];
+		//elevatorPending = new boolean[numElevators];
+		errorList = new ArrayList<ErrorEvent>();
 		
 		//Initialize the elevators
 		for (int i = 0; i < numElevators; i ++) {
-			elevatorList[i] = (new Elevator(i, numFloors, this));
-			elevatorPending[i] = false;
-			print("Elevator " + i + " started.");
-			elevatorList[i].start();
-		}
-	}
-
-
-	/**
-	 * Receive a packet from the scheduler
-	 */
-	public void receive() {
-		// Construct a DatagramPacket for receiving packets up
-		// to 5000 bytes long (the length of the byte array).
-
-		byte data[] = new byte[5000];
-		receivePacket = new DatagramPacket(data, data.length);
-		print("Waiting for Packet.\n");
-
-		// Block until a datagram packet is received from receiveSocket.
-		try {
-			//print("Waiting..."); // so we know we're waiting
-			receiveSocket.receive(receivePacket);
-			
-			if (schedulerAddress == null) {
-				schedulerAddress = receivePacket.getAddress();
-				
-				for (Elevator elevator: elevatorList) {
-					elevator.setSchedulerAddress(schedulerAddress);
-				}
-			}
-			
-		} catch (IOException e) {
-			print("IO Exception: likely:");
-			print("Receive Socket Timed Out.\n" + e);
-			e.printStackTrace();
-			System.exit(1);
+			elevatorList[i] = (new Elevator(i, numFloors, this, 2000 + i));
+			//elevatorPending[i] = false;
 		}
 		
-		try {
-			//Retrieve the ElevatorData object from the receive packet
-			ByteArrayInputStream byteStream = new ByteArrayInputStream(data);
-			ObjectInputStream is;
-			is = new ObjectInputStream(new BufferedInputStream(byteStream));
-			Object o = is.readObject();
-			is.close();
-			
-			scheDat = (SchedulerData) o;
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		print("Packet received.");
+		
 	}
+
+
+//	/**
+//	 * Receive a packet from the scheduler
+//	 */
+//	public void receive() {
+//		// Construct a DatagramPacket for receiving packets up
+//		// to 5000 bytes long (the length of the byte array).
+//
+//		byte data[] = new byte[5000];
+//		receivePacket = new DatagramPacket(data, data.length);
+//		print("Waiting for Packet.\n");
+//
+//		// Block until a datagram packet is received from receiveSocket.
+//		try {
+//			//print("Waiting..."); // so we know we're waiting
+//			receiveSocket.receive(receivePacket);
+//			
+//			if (schedulerAddress == null) {
+//				schedulerAddress = receivePacket.getAddress();
+//				
+//				for (Elevator elevator: elevatorList) {
+//					elevator.setSchedulerAddress(schedulerAddress);
+//				}
+//			}
+//			
+//		} catch (IOException e) {
+//			print("IO Exception: likely:");
+//			print("Receive Socket Timed Out.\n" + e);
+//			e.printStackTrace();
+//			System.exit(1);
+//		}
+//		
+//		try {
+//			//Retrieve the ElevatorData object from the receive packet
+//			ByteArrayInputStream byteStream = new ByteArrayInputStream(data);
+//			ObjectInputStream is;
+//			is = new ObjectInputStream(new BufferedInputStream(byteStream));
+//			Object o = is.readObject();
+//			is.close();
+//			
+//			scheDat = (SchedulerData) o;
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		} catch (ClassNotFoundException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//
+//		print("Packet received.");
+//	}
 
 	/**
 	 * Returns the last sent elevator packet
@@ -117,23 +123,23 @@ public class ElevatorSubsystem extends Thread {
 		return elevDat;
 	}
 	
-	/**
-	 * Set the waiting flag on, pending for a packet
-	 * @param elevatorNum
-	 * @param pending
-	 */
-	public void setPending(int elevatorNum, boolean pending) {
-		elevatorPending[elevatorNum] = pending;
-	}
+//	/**
+//	 * Set the waiting flag on, pending for a packet
+//	 * @param elevatorNum
+//	 * @param pending
+//	 */
+//	public void setPending(int elevatorNum, boolean pending) {
+//		elevatorPending[elevatorNum] = pending;
+//	}
 	
-	/**
-	 * Returns true if that elevator should be pending for a packet, false otherwise
-	 * @param elevatorNum
-	 * @return
-	 */
-	public boolean isPending(int elevatorNum) {
-		return elevatorPending[elevatorNum];
-	}
+//	/**
+//	 * Returns true if that elevator should be pending for a packet, false otherwise
+//	 * @param elevatorNum
+//	 * @return
+//	 */
+//	public boolean isPending(int elevatorNum) {
+//		return elevatorPending[elevatorNum];
+//	}
 	
 	/**
 	 * Returns the last received scheduler packet
@@ -152,23 +158,29 @@ public class ElevatorSubsystem extends Thread {
 		return elevatorList[elevatorNum];
 	}
 	
-	/**
-	 * Route the received packet to the corresponding elevator
-	 */
-	public void routePacket() {
-		int routedElevatorNumber = scheDat.getElevatorNumber();
-		Elevator routedElevator = elevatorList[routedElevatorNumber];
+//	/**
+//	 * Route the received packet to the corresponding elevator
+//	 */
+//	public void routePacket() {
+//		int routedElevatorNumber = scheDat.getElevatorNumber();
+//		Elevator routedElevator = elevatorList[routedElevatorNumber];
+//		
+//		print("Routing to Elevator " + routedElevatorNumber + ".\n");
+//
+//		//Elevator stops waiting, and is ready to receive the packet
+//		elevatorPending[routedElevatorNumber] = false;
+//		
+//		//Delay so that the elevator can finish waiting
+//		wait(1000);
+//		
+//		//Elevator receives the packet
+//		routedElevator.receiveRequest(scheDat);
+//	}
+	
+	public void loadErrors() {
+		//Hard Coded error events
+		elevatorList[0].addError(new ErrorEvent(ErrorEvent.DOOR_STUCK, 5000));
 		
-		print("Routing to Elevator " + routedElevatorNumber + ".\n");
-
-		//Elevator stops waiting, and is ready to receive the packet
-		elevatorPending[routedElevatorNumber] = false;
-		
-		//Delay so that the elevator can finish waiting
-		wait(1000);
-		
-		//Elevator receives the packet
-		routedElevator.receiveRequest(scheDat);
 	}
 	
 	/**
@@ -204,10 +216,11 @@ public class ElevatorSubsystem extends Thread {
 		/**
 		 * Elevator subsystem logic
 		 */
+		loadErrors();
 		
-		while(true) {
-			receive();
-			routePacket();
+		for (Elevator e: elevatorList) {
+			
+			e.start();
 		}
 	}
 	

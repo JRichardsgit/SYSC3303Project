@@ -26,7 +26,7 @@ public class Scheduler {
 
 	// Elevator Data List
 	private ElevatorData elevData[];
-	
+
 	// Elevator Routing
 	private ArrayList<ElevatorData> potentialRoutes;
 	private int routedElevator;
@@ -69,7 +69,8 @@ public class Scheduler {
 		elevData = new ElevatorData[numElevators];
 		for (int i = 0; i < numElevators; i++) {
 			// Assume same starting position as set in elevator subsystem
-			elevData[i] = new ElevatorData(i, 1, new ArrayList<Integer>(), false, false, false);
+			elevData[i] = new ElevatorData(i, 2000 + i, ElevatorData.NO_ERROR, 
+					1, new ArrayList<Integer>(), false, false, false, false);
 		}
 
 	}
@@ -129,8 +130,9 @@ public class Scheduler {
 	 *            the scheduler data
 	 */
 	public void elevatorSend(SchedulerData scheDat) {
-	
+
 		this.scheDat = scheDat;
+		int targetPort = 2000 + scheDat.getElevatorNumber();
 		try {
 			// Convert the FloorData object into a byte array
 			ByteArrayOutputStream baoStream = new ByteArrayOutputStream();
@@ -140,10 +142,9 @@ public class Scheduler {
 			ooStream.writeObject(scheDat);
 			ooStream.flush();
 			byte msg[] = baoStream.toByteArray();
-	
-			elevatorSendPacket = new DatagramPacket(msg, msg.length, receivePacket.getAddress(), 2000);// elevatorSubsystem
-			// server
-			// port
+
+			elevatorSendPacket = new DatagramPacket(msg, msg.length, receivePacket.getAddress(), targetPort);
+
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -155,7 +156,7 @@ public class Scheduler {
 			e.printStackTrace();
 			System.exit(1);
 		}
-	
+
 		print("Scheduler: Sent packet to ElevatorSubsystem.");
 	}
 
@@ -264,37 +265,58 @@ public class Scheduler {
 	public void manageElevators() {
 		ElevatorData e = elevDat;
 		SchedulerData s = null;
+		int errType = e.getErrorType();
 		int currentFloor = e.getCurrentFloor();
+
+		switch(errType) {
+		case ElevatorData.NO_ERROR:
+			// If elevator is on the current requested floor
+			if (e.getRequestedFloors().contains(currentFloor)) {
+				//If motor is still active, stop and open doors
+				print("SIGNAL STOP to Elevator: " + e.getElevatorNumber() + ".");
+				s = new SchedulerData(e.getElevatorNumber(), SchedulerData.STOP_REQUEST, false, false, true);
+
+			}
+
+			//If elevator has not reached it's current destination
+			else if (!e.getRequestedFloors().isEmpty()) {
+				// If elevator is above floor, move down, close doors
+				if (currentFloor > e.getRequestedFloors().get(0) && e.isIdle()) {
+					print("SIGNAL MOVE DOWN to elevator: " + e.getElevatorNumber());
+					s = new SchedulerData(e.getElevatorNumber(), SchedulerData.MOVE_REQUEST, false, true,
+							false);
+				}
+				// If elevator is below floor, move up, close doors
+				else if (currentFloor < e.getRequestedFloors().get(0) && e.isIdle()) {
+					print("SIGNAL MOVE UP to elevator: " + e.getElevatorNumber());
+					s = new SchedulerData(e.getElevatorNumber(), SchedulerData.MOVE_REQUEST, true, false,
+							false);
+				}
+				//If already moving towards destination floor, just tell it to continue
+				else {
+					print("SIGNAL CONTINUE to elevator: " + e.getElevatorNumber());
+					s = new SchedulerData(e.getElevatorNumber(), SchedulerData.CONTINUE_REQUEST);
+				}
+
+			}
+			break;
+		case ElevatorData.DOOR_STUCK_ERROR:
+			//Tell it to open/close its doors
+			if (e.doorOpened()) 
+				print("SIGNAL CLOSE DOORS to elevator: " + e.getElevatorNumber());
+			else 
+				print("SIGNAL OPEN DOORS to elevator: " + e.getElevatorNumber());
 		
-		// If elevator is on the current requested floor
-		if (e.getRequestedFloors().contains(currentFloor)) {
-			//If motor is still active, stop and open doors
-		    print("SIGNAL STOP to Elevator: " + e.getElevatorNumber() + ".");
-		    s = new SchedulerData(e.getElevatorNumber(), SchedulerData.STOP_REQUEST, false, false, true);
-
+			s = new SchedulerData(e.getElevatorNumber(), SchedulerData.DOOR_REQUEST);
+			
+			break;
+			
+		case ElevatorData.ELEVATOR_STUCK_ERROR:
+			//Elevator no longer works, and will not receive any further instructions
+				print("Elevator " + e.getElevatorNumber() + ": SHUTDOWN.");
+			break;
 		}
-
-		//If elevator has not reached it's current destination
-		else if (!e.getRequestedFloors().isEmpty()) {
-			// If elevator is above floor, move down, close doors
-			if (currentFloor > e.getRequestedFloors().get(0) && e.isIdle()) {
-				print("SIGNAL MOVE DOWN to elevator: " + e.getElevatorNumber());
-				s = new SchedulerData(e.getElevatorNumber(), SchedulerData.MOVE_REQUEST, false, true,
-						false);
-			}
-			// If elevator is below floor, move up, close doors
-			else if (currentFloor < e.getRequestedFloors().get(0) && e.isIdle()) {
-				print("SIGNAL MOVE UP to elevator: " + e.getElevatorNumber());
-				s = new SchedulerData(e.getElevatorNumber(), SchedulerData.MOVE_REQUEST, true, false,
-						false);
-			}
-			//If already moving towards destination floor, just tell it to continue
-			else {
-				print("SIGNAL CONTINUE to elevator: " + e.getElevatorNumber());
-				s = new SchedulerData(e.getElevatorNumber(), SchedulerData.CONTINUE_REQUEST);
-			}
-
-		}
+		
 		//Send the scheduler packet
 		if (s != null)
 			elevatorSend(s);
@@ -391,11 +413,11 @@ public class Scheduler {
 		}
 		return true;
 	}
-	
+
 	public int closestElevator() {
 		//Assume closest is elevator 0
 		ElevatorData closest = potentialRoutes.get(0);
-		
+
 		for (ElevatorData e: potentialRoutes) {
 			//If elevator is closer that the current closest, it becomes the new closest
 			if (Math.abs((e.getCurrentFloor() - floorDat.getFloorNum())) < Math
@@ -415,23 +437,23 @@ public class Scheduler {
 
 		potentialRoutes = new ArrayList<ElevatorData>();
 		ArrayList<ElevatorData> optimalRoutes = new ArrayList<ElevatorData>();
-		
+
 		//If an elevator is on the same floor, send the first one by default
 		if (elevatorSameFloor()) {
 			routedElevator = potentialRoutes.get(0).getElevatorNumber();
 		}
-		
+
 		//If all are above or below, send the closest
 		else if (allElevatorsAboveFloor() || allElevatorsBelowFloor()) {
 			routedElevator = closestElevator();
 		}
-		
+
 		//Else, just send the closest one out of all the elevators
 		else if (elevatorAboveFloor() || elevatorBelowFloor()) {
 			for (ElevatorData e: elevData) {
 				potentialRoutes.add(e);
 			}
-			
+
 			routedElevator = closestElevator();
 		}
 
