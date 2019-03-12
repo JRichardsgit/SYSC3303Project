@@ -10,6 +10,7 @@ public class Floor {
 	
 	private boolean upPressed; //true if up is pressed/false otherwise
 	private boolean downPressed; //true if down is pressed/false otherwise
+	private int destFloor; //destination floor
 	private ArrayList<Integer> floorLamps; //list of floors the elevators are currently on
 	
 	/**
@@ -55,6 +56,14 @@ public class Floor {
 	}
 	
 	/**
+	 * Set the destination floor
+	 * @param destFloor
+	 */
+	public void setDestination(int destFloor) {
+		this.destFloor = destFloor;
+	}
+	
+	/**
 	 * Turn on the corresponding floor lamps
 	 * @param floorLamps the lamps to turn on
 	 */
@@ -69,10 +78,10 @@ public class Floor {
 	public FloorData getFloorData() {
 		//If up was pressed
 		if (upPressed)
-			return new FloorData(floorNum, true);
+			return new FloorData(floorNum, true, destFloor);
 		
 		//If down was pressed
-		return new FloorData(floorNum, false);
+		return new FloorData(floorNum, false, destFloor);
 					
 	}
 

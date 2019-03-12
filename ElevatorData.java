@@ -12,14 +12,18 @@ public class ElevatorData implements Serializable {
 	private ArrayList<Integer> reqFloor; //the requested floors
 	private boolean movingUp; //true if elevator is moving up, false otherwise
 	private boolean movingDown; //true if elevator is moving down, false otherwise
-	private boolean doorOpened;
-	private String status; 
+	private boolean doorOpened; //door flag
+	private String status; //status for console messages
 	
 	/**
-	 * @param elevatorNum the designated elevator
-	 * @param currFloor the floor the elevator is currently on
-	 * @param reqFloor the floor destinations
-	 * @param movingUp true if the elevator is moving up, false otherwise
+	 * Constructor for the ElevatorData object
+	 * 
+	 * @param elevatorNum
+	 * @param currFloor
+	 * @param reqFloor list of current outstanding floor requests
+	 * @param movingUp 
+	 * @param movingDown 
+	 * @param doorOpened
 	 */
 	public ElevatorData(int elevatorNum, int currFloor, ArrayList<Integer> reqFloor, boolean movingUp, boolean movingDown, boolean doorOpened) {
 		this.elevatorNum = elevatorNum;
@@ -92,6 +96,10 @@ public class ElevatorData implements Serializable {
 		return false;
 	}
 	
+	/**
+	 * Returns true if the elevator door is open, false otherwise
+	 * @return Returns true if the elevator door is open, false otherwise
+	 */
 	public boolean doorOpened() {
 		return doorOpened;
 	}

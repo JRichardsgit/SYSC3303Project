@@ -12,13 +12,12 @@ import java.net.*;
  */
 public class Elevator extends Thread {
 
+	// Socket and Packet
 	DatagramPacket sendPacket;
 	DatagramSocket sendSocket;
 
+	// Scheduler address for sending packets
 	InetAddress schedulerAddress;
-
-	// Elevator Status
-	private String status;
 
 	// Elevator Number
 	private final int elevatorNum;
@@ -26,7 +25,7 @@ public class Elevator extends Thread {
 	// Number of floors
 	private final int numFloors;
 
-	// Movement flags
+	// Motor flags
 	private boolean movingUp;
 	private boolean movingDown;
 
@@ -38,8 +37,10 @@ public class Elevator extends Thread {
 
 	// Floor Information
 	private ArrayList<Integer> reqFloors;
+	private ArrayList<Integer> destFloors[];
 	private int currFloor;
-	
+
+	//Ready flag
 	private boolean actionReady;
 
 	/**
@@ -57,8 +58,6 @@ public class Elevator extends Thread {
 			// send UDP Datagram packets.
 			sendSocket = new DatagramSocket();
 
-			// to test socket timeout (2 seconds)
-			// receiveSocket.setSoTimeout(2000);
 		} catch (SocketException se) {
 			se.printStackTrace();
 			System.exit(1);
@@ -67,30 +66,24 @@ public class Elevator extends Thread {
 		this.elevatorNum = elevatorNum;
 		this.numFloors = numFloors;
 		this.eSystem = eSystem;
-		status = "Idle";
 		movingUp = false;
 		movingDown = false;
 		doorOpen = false;
-		reqFloors = new ArrayList<Integer>();
 		currFloor = 1;
 		actionReady = false;
-	}
-
-	@Override
-	public void run() {
-
-		waitForInstruction();
+		reqFloors = new ArrayList<Integer>();
+		destFloors = new ArrayList[numFloors];
 		
-		while (true) {
-			if (!reqFloors.isEmpty() && actionReady) {
-				moveOneFloor();
-				send();
-				waitForInstruction();
-			}
-			wait(1000);
+		for (int i = 0; i < numFloors; i ++) {
+			destFloors[i] = new ArrayList<Integer>();
 		}
+
 	}
 
+	/**
+	 * Set the scheduler address for sending packets
+	 * @param address
+	 */
 	public void setSchedulerAddress(InetAddress address) {
 		schedulerAddress = address;
 	}
@@ -129,79 +122,114 @@ public class Elevator extends Thread {
 	}
 
 	/**
-	 * Update floor requests with the received request from the scheduler and random
-	 * requests from the elevator user
+	 * Receive the relayed scheduler packet
+	 * @param s the scheduler packet relayed by the ElevatorSubsystem
 	 */
 	public void receiveRequest(SchedulerData s) {
-	
+
 		int mode = s.getMode();
 		switch (mode) {
-			case SchedulerData.FLOOR_REQUEST:
-				print("Received FLOOR request.\n");
-				reqFloors.removeAll(s.getReqFloors());
-				reqFloors.addAll(s.getReqFloors());
-				//Collections.sort(reqFloors);
-				print("Current requests: " + reqFloors.toString());
-				break;
+		case SchedulerData.FLOOR_REQUEST:
+			print("Received FLOOR request.\n");
+			int floor = s.getReqFloors().get(0);
+
+			//Add the requested floor to the list
+			if (!reqFloors.contains(floor))
+				reqFloors.add(floor);
 			
-			case SchedulerData.MOVE_REQUEST:
-				print("Received MOVE request.\n");
-				if (doorOpen) //If door open, close the door before moving
-					closeDoor();
+			//Update the destination floors for the requested floor
+			//(floor requests that will be added when the elevator reaches that floor)
+			destFloors[floor - 1].add(s.getDestFloor());
+		
+			print("Current requests: " + reqFloors.toString());
+			break;
+
+		case SchedulerData.MOVE_REQUEST:
+			print("Received MOVE request.\n");
+			if (doorOpen) //If door open, close the door before moving
+				closeDoor();
+
+			if (s.moveUp()) { //If request was to move up
+				moveUp();
+			} else {
+				moveDown(); //If request was to move down
+			} 
+			break;
+
+		case SchedulerData.CONTINUE_REQUEST:
+			print("Received CONTINUE request.\n");
+			//Elevator's motor flags and door flags remain unchanged
+			break;
+
+		case SchedulerData.STOP_REQUEST:
+			print("Received STOP request.\n");
+			//Stop the motor and open the door
+			stopMotor();
+			openDoor();
+
+			print("Arrived at floor " + currFloor + ".\n");
+			
+			if (!reqFloors.isEmpty()) {
+				//Remove the floor that we arrived at from the requested floors
+				reqFloors.remove(new Integer(currFloor));
 				
-				if (s.moveUp()) {
-					moveUp();
-				} else {
-					moveDown();
-				} 
-				break;
+				//Add all the floor destinations from people who just boarded to the requested floors
+				reqFloors.removeAll(destFloors[currFloor - 1]);
+				reqFloors.addAll(destFloors[currFloor - 1]);
 				
-			case SchedulerData.CONTINUE_REQUEST:
-				print("Received CONTINUE request.\n");
-				break;
-				
-			case SchedulerData.STOP_REQUEST:
-				print("Received STOP request.\n");
-				stopMotor();
-				openDoor();
-				if (!reqFloors.isEmpty()) {
-					print("Arrived at floor " + currFloor + ".\n");
-					reqFloors.remove(new Integer(currFloor));
-				} 
-				break;
+				//Clear the destination floors from that floor
+				destFloors[currFloor - 1].clear();
+			} 
+			
+			send();
+			break;
 		}
 	}
 
+	/**
+	 * Wait until the scheduler sends a request
+	 */
 	public void waitForInstruction() {
+		//Set wait flag true
 		eSystem.setPending(elevatorNum, true);
 		print("Awaiting Instruction.\n");
 		while (eSystem.isPending(elevatorNum)) {
 			wait(1000);
 		}
+		//Ready for another action
 		actionReady = true;
 	}
 
+	/**
+	 * Operates on a one floor basis determined by the set motor flags, if elevator is idle, does nothing
+	 */
 	public void moveOneFloor() {
-		//If door is open, wait until closed
+		//If door is open, wait until closed before moving
 		while (doorOpen && !isIdle()) {
 			wait(1000);
 		}
-		
-		//If train is moving or has just stopped
+
+		//If elevator is moving
 		if (!isIdle()) {
 			if (movingUp) {
 				currFloor++;
+				if (currFloor > numFloors) {
+					currFloor = numFloors;
+				}
 				print("Currently on floor " + currFloor + ", moving up.");
 			} else if (movingDown) {
 				currFloor--;
+				if (currFloor <= 0) {
+					currFloor = 1;
+				}
 				print("Currently on floor " + currFloor + ", moving down.");
 			} 
 			wait(1000);
 		} 
 		
+		//If the elevator has just stopped and there are no more outstanding requests
 		if (reqFloors.isEmpty())
 			actionReady = false;
-		
 	}
 
 	/**
@@ -231,23 +259,10 @@ public class Elevator extends Thread {
 	}
 
 	/**
-	 * Returns true if idle
+	 * Returns true if the motor idle
 	 */
 	public boolean isIdle() {
 		return (!movingUp && !movingDown);
-	}
-
-	/**
-	 * Request a floor from within the elevator
-	 * 
-	 * @param floorNum
-	 *            the requested floor
-	 */
-	public void chooseFloor(int floorNum) {
-		// Only add requested floor if not already requested
-		if (!reqFloors.contains((Integer) floorNum))
-			reqFloors.add(floorNum);
-		// Collections.sort(reqFloors);
 	}
 
 	/**
@@ -276,7 +291,6 @@ public class Elevator extends Thread {
 
 	/**
 	 * Return this elevator's data
-	 * 
 	 * @return this elevator's data
 	 */
 	public ElevatorData getElevatorData() {
@@ -284,10 +298,8 @@ public class Elevator extends Thread {
 	}
 
 	/**
-	 * Simulate waiting time for elevator actions
-	 * 
-	 * @param ms
-	 *            the time to wait, in milliseconds
+	 * Simulate waiting time for elevator actions, and for delays
+	 * @param ms the time to wait, in milliseconds
 	 */
 	public void wait(int ms) {
 		try {
@@ -300,12 +312,30 @@ public class Elevator extends Thread {
 
 	/**
 	 * Print a status message in the console
-	 * 
-	 * @param message
-	 *            the message to be printed
+	 * @param message the message to be printed
 	 */
 	public void print(String message) {
 		System.out.println("Elevator " + elevatorNum + ": " + message);
+	}
+
+	@Override
+	public void run() {
+	
+		waitForInstruction();
+	
+		while (true) {
+			//If there are requested floors, and the elevator is ready to move
+			//(Doors are closed/no pending requests)
+			if (!reqFloors.isEmpty() && actionReady) {
+				moveOneFloor();
+				//Update the scheduler about current status
+				send();
+				//Pending for further instruction from the scheduler
+				waitForInstruction();
+			}
+			//Slow down a bit
+			wait(1000);
+		}
 	}
 
 }

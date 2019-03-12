@@ -6,34 +6,45 @@ import java.util.ArrayList;
  * The Data Structure for the SchedulerData Class
  *
  */
-
-
 public class SchedulerData implements Serializable {
+	//CONSTANTS FOR REQUEST MODES
 	public final static int FLOOR_REQUEST = 0;
 	public final static int MOVE_REQUEST = 1;
 	public final static int CONTINUE_REQUEST = 2;
 	public final static int STOP_REQUEST = 3;
 	
 
-	private final int mode;
-	private final int elevatorNum;
+	private final int mode; //the request mode 
+	private final int elevatorNum; //the elevator this data is being sent to
 	private boolean floorLamps[]; //true if an elevatorSubsystem is on that floorSubsystem, false if none; array of floorSubsystem lamp states
 	private ArrayList<Integer> reqFloors; //array of destination floors
-	private boolean moveUp, moveDown, doorOpen;
+	private int destFloor; //the destination floor
+	private boolean moveUp, moveDown, doorOpen; //motor, door flags
 	
 	/**
-	 * Creates an new SchedulerData Object
-	 * @param elevatorNum the elevator to relay to
-	 * @param floorLamps the array of floorLamps
-	 * @param floorSubsystem the floorSubsystem destinations to send the elevatorSubsystem
+	 * Constructor signature for FLOOR requests
+	 * @param elevatorNum
+	 * @param mode
+	 * @param floorLamps
+	 * @param reqFloors
+	 * @param destFloor
 	 */
-	public SchedulerData(int elevatorNum, int mode, boolean floorLamps[], ArrayList<Integer> reqFloors) {
+	public SchedulerData(int elevatorNum, int mode, boolean floorLamps[], ArrayList<Integer> reqFloors, int destFloor) {
 		this.mode = mode;
 		this.elevatorNum = elevatorNum;
 		this.floorLamps = floorLamps;
 		this.reqFloors = reqFloors;
+		this.destFloor = destFloor;
 	}
 	
+	/**
+	 * Constructor signature for MOVE/STOP requests
+	 * @param elevatorNum
+	 * @param mode
+	 * @param moveUp
+	 * @param moveDown
+	 * @param doorOpen
+	 */
 	public SchedulerData(int elevatorNum, int mode, boolean moveUp, boolean moveDown, boolean doorOpen) {
 		this.mode = mode;
 		this.elevatorNum = elevatorNum;
@@ -42,6 +53,11 @@ public class SchedulerData implements Serializable {
 		this.doorOpen = doorOpen;
 	}
 	
+	/**
+	 * Constructor signature for CONTINUE requests
+	 * @param elevatorNum
+	 * @param mode
+	 */
 	public SchedulerData(int elevatorNum, int mode) {
 		this.elevatorNum = elevatorNum;
 		this.mode = mode;
@@ -60,6 +76,14 @@ public class SchedulerData implements Serializable {
 	 */
 	public ArrayList<Integer> getReqFloors() {
 		return reqFloors;
+	}
+	
+	/**
+	 * Returns the destination floor
+	 * @return the destination floor
+	 */
+	public int getDestFloor() {
+		return destFloor;
 	}
 	
 	/**
@@ -97,13 +121,17 @@ public class SchedulerData implements Serializable {
 	}
 	
 	/**
-	 * 
+	 * Returns true if the door is open, false if closed
 	 * @return doorOpen
 	 */
 	public boolean doorOpen() {
 		return doorOpen;
 	}
 	
+	/**
+	 * Returns the mode of the request (FLOOR, MOVE, CONTINUE, STOP)
+	 * @return
+	 */
 	public int getMode() {
 		return mode;
 	}

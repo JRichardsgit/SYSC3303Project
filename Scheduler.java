@@ -13,11 +13,8 @@ public class Scheduler {
 	DatagramPacket floorSendPacket, elevatorSendPacket, receivePacket;
 	DatagramSocket sendSocket, receiveSocket;
 
+	//Queue for received packets
 	ArrayList<DatagramPacket> receiveQueue;
-
-	// Send switch
-	boolean sendElevator;
-	boolean sendFloor;
 
 	// Lamps and Sensors
 	private boolean floorLamps[];
@@ -29,6 +26,8 @@ public class Scheduler {
 
 	// Elevator Data List
 	private ElevatorData elevData[];
+	
+	// Elevator Routing
 	private ArrayList<ElevatorData> potentialRoutes;
 	private int routedElevator;
 
@@ -49,17 +48,15 @@ public class Scheduler {
 			// send UDP Datagram packets.
 			sendSocket = new DatagramSocket();
 
-			// Construct a datagram socket and bind it to port 4000
+			// Construct a datagram socket and bind it to port 3000
 			// on the local host machine. This socket will be used to
 			// receive UDP Datagram packets.
 
 			receiveSocket = new DatagramSocket(3000);
 
-			// to test socket timeout (2 seconds)
-			//receiveSocket.setSoTimeout(25000);
-
 		} catch (SocketException se) {
-
+			se.printStackTrace();
+			System.exit(1);
 		}
 
 		receiveQueue = new ArrayList<DatagramPacket>();
@@ -68,9 +65,6 @@ public class Scheduler {
 		floorLamps = new boolean[numFloors];
 		arrivalSensors = new boolean[numFloors];
 		reqFloors = new ArrayList<Integer>();
-
-		sendElevator = false;
-		sendFloor = false;
 
 		elevData = new ElevatorData[numElevators];
 		for (int i = 0; i < numElevators; i++) {
@@ -124,8 +118,45 @@ public class Scheduler {
 			System.exit(1);
 		}
 
-		processFloorSend();
+		print("Scheduler: Sent packet to FloorSubsystem.");
 
+	}
+
+	/**
+	 * Send the Elevator subsystem a data packet
+	 *
+	 * @param scheDat
+	 *            the scheduler data
+	 */
+	public void elevatorSend(SchedulerData scheDat) {
+	
+		this.scheDat = scheDat;
+		try {
+			// Convert the FloorData object into a byte array
+			ByteArrayOutputStream baoStream = new ByteArrayOutputStream();
+			ObjectOutputStream ooStream;
+			ooStream = new ObjectOutputStream(new BufferedOutputStream(baoStream));
+			ooStream.flush();
+			ooStream.writeObject(scheDat);
+			ooStream.flush();
+			byte msg[] = baoStream.toByteArray();
+	
+			elevatorSendPacket = new DatagramPacket(msg, msg.length, receivePacket.getAddress(), 2000);// elevatorSubsystem
+			// server
+			// port
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		// Send the datagram packet to the client via the send socket.
+		try {
+			sendSocket.send(elevatorSendPacket);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+	
+		print("Scheduler: Sent packet to ElevatorSubsystem.");
 	}
 
 	/**
@@ -152,9 +183,10 @@ public class Scheduler {
 	public void processAndSend() {
 
 		try {
-			// Retrieve the ElevatorData object from the receive packet
+			// Process all received packets and retrieve the FloorData, ElevatorData objects
 			if (!receiveQueue.isEmpty()) {
 				for (DatagramPacket dPacket : receiveQueue) {
+					//Convert packet's byte array into the object
 					ByteArrayInputStream byteStream = new ByteArrayInputStream(dPacket.getData());
 					ObjectInputStream is;
 					is = new ObjectInputStream(new BufferedInputStream(byteStream));
@@ -163,7 +195,8 @@ public class Scheduler {
 
 					if (o instanceof FloorData) {
 						floorDat = (FloorData) o;
-						processFloorReceived();
+						print("Scheduler: Packet received.");
+						print("Containing:\n	" + floorDat.getStatus() + "\n");
 
 						updateRequests();
 						routeElevator();
@@ -171,7 +204,8 @@ public class Scheduler {
 						clearRequest();
 					} else {
 						elevDat = (ElevatorData) o;
-						processElevatorReceived();
+						print("Scheduler: Packet received.");
+						print("Containing:\n	" + elevDat.getStatus() + "\n");
 
 						elevData[elevDat.getElevatorNumber()] = elevDat;
 						displayElevatorStates();
@@ -193,76 +227,9 @@ public class Scheduler {
 	}
 
 	/**
-	 * Send the Elevator subsystem a data packet
-	 *
-	 * @param scheDat
-	 *            the scheduler data
+	 * Wait for the specified amount of time
 	 */
-	public void elevatorSend(SchedulerData scheDat) {
-
-		this.scheDat = scheDat;
-		try {
-			// Convert the FloorData object into a byte array
-			ByteArrayOutputStream baoStream = new ByteArrayOutputStream();
-			ObjectOutputStream ooStream;
-			ooStream = new ObjectOutputStream(new BufferedOutputStream(baoStream));
-			ooStream.flush();
-			ooStream.writeObject(scheDat);
-			ooStream.flush();
-			byte msg[] = baoStream.toByteArray();
-
-			elevatorSendPacket = new DatagramPacket(msg, msg.length, receivePacket.getAddress(), 2000);// elevatorSubsystem
-			// server
-			// port
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		// Send the datagram packet to the client via the send socket.
-		try {
-			sendSocket.send(elevatorSendPacket);
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
-
-		processElevatorSend();
-	}
-
-	/**
-	 * Process the received floor packet
-	 */
-	public void processFloorReceived() {
-		print("Scheduler: Packet received.");
-		print("Containing:\n	" + floorDat.getStatus() + "\n");
-	}
-
-	/**
-	 * Process the received elevator packet
-	 */
-	public void processElevatorReceived() {
-		print("Scheduler: Packet received.");
-		print("Containing:\n	" + elevDat.getStatus() + "\n");
-	}
-
-	/**
-	 * Process the scheduler packet sent to the Elevator subsystem
-	 */
-	public void processElevatorSend() {
-		print("Scheduler: Sent packet to ElevatorSubsystem.");
-	}
-
-	/**
-	 * Process the scheduler packet sent to the Floor subsystem
-	 */
-	public void processFloorSend() {
-		print("Scheduler: Sent packet to FloorSubsystem.");
-	}
-
-	/**
-	 * Wait 5 seconds
-	 */
-	public void waitTime(int ms) {
+	public void wait(int ms) {
 		// Slow things down (wait 5 seconds)
 		try {
 			Thread.sleep(ms);
@@ -280,6 +247,9 @@ public class Scheduler {
 			reqFloors.add(floorDat.getFloorNum());
 	}
 
+	/**
+	 * Display all elevator statuses 
+	 */
 	public void displayElevatorStates() {
 		print("ELEVATOR STATUS:");
 		for (ElevatorData e : elevData) {
@@ -289,21 +259,23 @@ public class Scheduler {
 	}
 
 	/**
-	 * Manage the elevator that last updated it's status
+	 * Manage the elevator that last updated its status
 	 */
 	public void manageElevators() {
 		ElevatorData e = elevDat;
 		SchedulerData s = null;
 		int currentFloor = e.getCurrentFloor();
 		
-		// If elevator is on the current requested floor, stop and open doors
+		// If elevator is on the current requested floor
 		if (e.getRequestedFloors().contains(currentFloor)) {
-			print("SIGNAL STOP to Elevator: " + e.getElevatorNumber() + ".");
-			s = new SchedulerData(e.getElevatorNumber(), SchedulerData.STOP_REQUEST, false, false, true);
+			//If motor is still active, stop and open doors
+		    print("SIGNAL STOP to Elevator: " + e.getElevatorNumber() + ".");
+		    s = new SchedulerData(e.getElevatorNumber(), SchedulerData.STOP_REQUEST, false, false, true);
+
 		}
 
 		//If elevator has not reached it's current destination
-		else {
+		else if (!e.getRequestedFloors().isEmpty()) {
 			// If elevator is above floor, move down, close doors
 			if (currentFloor > e.getRequestedFloors().get(0) && e.isIdle()) {
 				print("SIGNAL MOVE DOWN to elevator: " + e.getElevatorNumber());
@@ -323,6 +295,7 @@ public class Scheduler {
 			}
 
 		}
+		//Send the scheduler packet
 		if (s != null)
 			elevatorSend(s);
 	}
@@ -343,9 +316,8 @@ public class Scheduler {
 	}
 
 	/**
-	 * Returns true if there is an elevator on the same floor
-	 *
-	 * @return
+	 * Returns true if there is an elevator on the same floor, false otherwise
+	 * @return true if there is an elevator on the same floor, false otherwise
 	 */
 	public boolean elevatorSameFloor() {
 		potentialRoutes.clear();
@@ -361,9 +333,8 @@ public class Scheduler {
 	}
 
 	/**
-	 * Returns true if there is an elevator above the requested floor
-	 *
-	 * @return
+	 * Returns true if there is an elevator above the requested floor, false otherwise
+	 * @return true if there is an elevator above the requested floor, false otherwise
 	 */
 	public boolean elevatorAboveFloor() {
 		potentialRoutes.clear();
@@ -377,9 +348,8 @@ public class Scheduler {
 	}
 
 	/**
-	 * Returns true if there is an elevator below the requested floor
-	 *
-	 * @return
+	 * Returns true if there is an elevator below the requested floor, false otherwise
+	 * @return true if there is an elevator below the requested floor, false otherwise
 	 */
 	public boolean elevatorBelowFloor() {
 		potentialRoutes.clear();
@@ -392,6 +362,10 @@ public class Scheduler {
 		return caseTrue;
 	}
 
+	/**
+	 * Returns true if all the elevators are above the floor, false otherwise
+	 * @return true if all the elevators are above the floor, false otherwise
+	 */
 	public boolean allElevatorsAboveFloor() {
 		potentialRoutes.clear();
 		for (int i = 0; i < elevData.length; i++) {
@@ -403,7 +377,10 @@ public class Scheduler {
 		return true;
 	}
 
-
+	/**
+	 * Returns true if all the elevators are below the floor, false otherwise
+	 * @return true if all the elevators are below the floor, false otherwise
+	 */
 	public boolean allElevatorsBelowFloor() {
 		potentialRoutes.clear();
 		for (int i = 0; i < elevData.length; i++) {
@@ -439,12 +416,12 @@ public class Scheduler {
 		potentialRoutes = new ArrayList<ElevatorData>();
 		ArrayList<ElevatorData> optimalRoutes = new ArrayList<ElevatorData>();
 		
-		//If an elevator is on the same floor
+		//If an elevator is on the same floor, send the first one by default
 		if (elevatorSameFloor()) {
 			routedElevator = potentialRoutes.get(0).getElevatorNumber();
 		}
 		
-		//If all are above or below
+		//If all are above or below, send the closest
 		else if (allElevatorsAboveFloor() || allElevatorsBelowFloor()) {
 			routedElevator = closestElevator();
 		}
@@ -459,7 +436,8 @@ public class Scheduler {
 		}
 
 		print("Sending request to Elevator " + routedElevator + ".\n");
-		scheDat = new SchedulerData(routedElevator, SchedulerData.FLOOR_REQUEST, floorLamps, reqFloors);
+		//Create the scheduler data object for sending 
+		scheDat = new SchedulerData(routedElevator, SchedulerData.FLOOR_REQUEST, floorLamps, reqFloors, floorDat.getDestFloor());
 	}
 
 	/**
@@ -508,7 +486,8 @@ public class Scheduler {
 		while (true) {
 			c.receive();
 			c.processAndSend();
-			c.waitTime(1000);
+			//Slow down
+			c.wait(1000);
 		}
 
 	}

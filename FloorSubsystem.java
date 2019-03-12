@@ -69,9 +69,8 @@ public class FloorSubsystem {
 			// Send the datagram packet to the server via the send/receive socket.
 			sendReceiveSocket.send(sendPacket);
 
-			processSend();
-
 			print("FloorSubsystem: Request sent to scheduler.\n");
+			print("Containing:\n " + floorDat.getStatus() + "\n");
 
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
@@ -121,10 +120,7 @@ public class FloorSubsystem {
 			e.printStackTrace();
 		}
 
-		processReceived();
-
-		print("FloorSubsystem: Packet received from scheduler.\n");
-
+		print("FloorSubsystem: Packet received:");
 	}
 
 	/**
@@ -133,33 +129,7 @@ public class FloorSubsystem {
 	public void closeSocket() {
 		sendReceiveSocket.close();
 	}
-
-	/**
-	 * Process the received packet
-	 */
-
-	public void processReceived() {
-		// Process the received datagram.
-		print("FloorSubsystem: Packet received:");
-		print("From host: " + receivePacket.getAddress());
-		print("Host port: " + receivePacket.getPort());
-		print("Length: " + receivePacket.getLength());
-
-
-	}
-
-	/**
-	 * Process the sent packet
-	 */
-
-	public void processSend() {
-		// Process Sent Datagram
-		print("FloorSubsystem: Sending packet to scheduler:");
-		print("Packet length: " + sendPacket.getLength());
-		print("Containing: \n" + floorDat.getStatus() + "\n");
-
-	}
-
+	
 	/**
 	 * Return the last sent floor data packet
 	 * @return the floor data
@@ -181,18 +151,26 @@ public class FloorSubsystem {
 	 * Go up from the specified floor 
 	 * @param floorNum
 	 */
-	public void goUp(int floorNum) {
-		getFloor(floorNum).pressUp();
-		send(getFloor(floorNum).getFloorData());
+	public void goUp(int currFloor, int destFloor) {
+		Floor floor = getFloor(currFloor);
+		
+		floor.pressUp();
+		floor.setDestination(destFloor);
+		
+		send(floor.getFloorData());
 	}
 	
 	/**
 	 * Go down from the specified floor
 	 * @param floorNum
 	 */
-	public void goDown(int floorNum) {
-		getFloor(floorNum).pressDown();
-		send(getFloor(floorNum).getFloorData());
+	public void goDown(int currFloor, int destFloor) {
+		Floor floor = getFloor(currFloor);
+		
+		floor.pressDown();
+		floor.setDestination(destFloor);
+		
+		send(floor.getFloorData());
 	}
 
 	/**
@@ -246,16 +224,16 @@ public class FloorSubsystem {
 		 * For now, hard code simulation data.
 		 */
 
-		c.goUp(4);
+		c.goUp(4, 5);
 		c.wait(5000);
 
-		c.goUp(2);
+		c.goUp(2, 4);
 		c.wait(5000);
 
-		c.goUp(1);
+		c.goUp(1, 3);
 		c.wait(5000);
 		
-		c.goDown(5);
+		c.goDown(5, 1);
 		c.wait(5000);
 		
 		c.closeSocket();

@@ -28,7 +28,7 @@ public class FloorParser{
 	public void Parse(String file) throws FileNotFoundException {
 		String[] str = new String[fields];
 		String filename = file +".txt";
-		File events = new File("C:\\Users\\JRich\\Documents\\" + filename); 	// FIX ME: change path to accept github 
+		File events = new File("Assets\\" + filename); 	// FIX ME: change path to accept github 
 		Scanner scan = new Scanner(events); 					// create new scanner
 		for(int j =0; scan.hasNext();j++) { 					//format instructions int 2D array. j = instruction #, i = instruction type
 			for(int i =0; i<fields;i++) {
@@ -69,7 +69,7 @@ public class FloorParser{
 		else if (instructions[instructionNum][2].equals("down")) 
 				ReqDirection = false;
 		else	
-			System.out.println("Incorrect Direction")
+			System.out.println("Incorrect Direction");
 		return ReqDirection;
 	}
 	public String getSysTime() { 				//get system time as a string to compare to instruction times

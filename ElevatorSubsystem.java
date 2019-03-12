@@ -1,6 +1,8 @@
 
 /**
  * This implementation of the ElevatorSubsystem Class
+ * Receives packets from the Scheduler and forwards/routes them to the corresponding elevator
+ * RECEIVES ONLY, sending is handled by each respective elevator
  */
 
 import java.io.*;
@@ -13,6 +15,7 @@ public class ElevatorSubsystem extends Thread {
 	DatagramPacket receivePacket;
 	DatagramSocket receiveSocket;
 	
+	//Scheduler Socket Address 
 	InetAddress schedulerAddress;
 
 	//Data Structures for relaying data
@@ -22,7 +25,9 @@ public class ElevatorSubsystem extends Thread {
 	//List of elevators
 	private Elevator elevatorList[];
 	
+	//To check if an elevator should be waiting for a request
 	private boolean elevatorPending[];
+	
 	/**
 	 * Create a new elevator subsystem with numElevators
 	 * @param numElevators the number of elevators in the system
@@ -34,8 +39,6 @@ public class ElevatorSubsystem extends Thread {
 			// receive UDP Datagram packets.
 			receiveSocket = new DatagramSocket(2000);
 
-			// to test socket timeout (2 seconds)
-			// receiveSocket.setSoTimeout(2000);
 		} catch (SocketException se) {
 			se.printStackTrace();
 			System.exit(1);
@@ -45,6 +48,7 @@ public class ElevatorSubsystem extends Thread {
 		elevatorList = new Elevator[numElevators];
 		elevatorPending = new boolean[numElevators];
 		
+		//Initialize the elevators
 		for (int i = 0; i < numElevators; i ++) {
 			elevatorList[i] = (new Elevator(i, numFloors, this));
 			elevatorPending[i] = false;
@@ -104,21 +108,7 @@ public class ElevatorSubsystem extends Thread {
 
 		print("Packet received.");
 	}
-	
-	public InetAddress getSchedulerAddress() {
-		return receivePacket.getAddress();
-	}
 
-	public void wait5s() {
-		// Slow things down (wait 5 seconds)
-		try {
-			Thread.sleep(8000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
-	}
-	
 	/**
 	 * Returns the last sent elevator packet
 	 * @return the last sent elevator packet
@@ -127,10 +117,20 @@ public class ElevatorSubsystem extends Thread {
 		return elevDat;
 	}
 	
+	/**
+	 * Set the waiting flag on, pending for a packet
+	 * @param elevatorNum
+	 * @param pending
+	 */
 	public void setPending(int elevatorNum, boolean pending) {
 		elevatorPending[elevatorNum] = pending;
 	}
 	
+	/**
+	 * Returns true if that elevator should be pending for a packet, false otherwise
+	 * @param elevatorNum
+	 * @return
+	 */
 	public boolean isPending(int elevatorNum) {
 		return elevatorPending[elevatorNum];
 	}
@@ -152,15 +152,22 @@ public class ElevatorSubsystem extends Thread {
 		return elevatorList[elevatorNum];
 	}
 	
+	/**
+	 * Route the received packet to the corresponding elevator
+	 */
 	public void routePacket() {
 		int routedElevatorNumber = scheDat.getElevatorNumber();
 		Elevator routedElevator = elevatorList[routedElevatorNumber];
 		
 		print("Routing to Elevator " + routedElevatorNumber + ".\n");
 
+		//Elevator stops waiting, and is ready to receive the packet
 		elevatorPending[routedElevatorNumber] = false;
 		
+		//Delay so that the elevator can finish waiting
 		wait(1000);
+		
+		//Elevator receives the packet
 		routedElevator.receiveRequest(scheDat);
 	}
 	
@@ -180,6 +187,10 @@ public class ElevatorSubsystem extends Thread {
 		System.out.println("ELEVATOR SUBSYSTEM: " + message);
 	}
 	
+	/**
+	 * Wait for the specified amount of time
+	 * @param ms
+	 */
 	public void wait(int ms) {
 		try {
 			Thread.sleep(ms);
