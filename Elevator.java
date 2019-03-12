@@ -131,7 +131,7 @@ public class Elevator extends Thread {
 		switch (mode) {
 		case SchedulerData.FLOOR_REQUEST:
 			print("Received FLOOR request.\n");
-			int floor = s.getReqFloors().get(0);
+			int floor = s.getReqFloor();
 
 			//Add the requested floor to the list
 			if (!reqFloors.contains(floor))

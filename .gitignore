@@ -13,3 +13,5 @@
 /ElevatorSubsystem.class
 /FloorSubsystem.class
 /FloorParser.class
+/ErrorData.class
+/ErrorEvent.class
