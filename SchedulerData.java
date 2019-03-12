@@ -18,7 +18,7 @@ public class SchedulerData implements Serializable {
 	private final int mode; //the request mode 
 	private final int elevatorNum; //the elevator this data is being sent to
 	private boolean floorLamps[]; //true if an elevatorSubsystem is on that floorSubsystem, false if none; array of floorSubsystem lamp states
-	private ArrayList<Integer> reqFloors; //array of destination floors
+	private int floor; //array of destination floors
 	private int destFloor; //the destination floor
 	private boolean moveUp, moveDown, doorOpen; //motor, door flags
 	
@@ -27,14 +27,14 @@ public class SchedulerData implements Serializable {
 	 * @param elevatorNum
 	 * @param mode
 	 * @param floorLamps
-	 * @param reqFloors
+	 * @param floor
 	 * @param destFloor
 	 */
-	public SchedulerData(int elevatorNum, int mode, boolean floorLamps[], ArrayList<Integer> reqFloors, int destFloor) {
+	public SchedulerData(int elevatorNum, int mode, boolean floorLamps[], int floor, int destFloor) {
 		this.mode = mode;
 		this.elevatorNum = elevatorNum;
 		this.floorLamps = floorLamps;
-		this.reqFloors = reqFloors;
+		this.floor = floor;
 		this.destFloor = destFloor;
 	}
 	
@@ -75,8 +75,8 @@ public class SchedulerData implements Serializable {
 	 * Returns the array of requested floors
 	 * @return the array of requested floors
 	 */
-	public ArrayList<Integer> getReqFloors() {
-		return reqFloors;
+	public int getReqFloor() {
+		return floor;
 	}
 	
 	/**
