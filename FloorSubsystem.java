@@ -176,6 +176,24 @@ public class FloorSubsystem {
 	public void setFloorData(FloorData floorDat) {
 		this.floorDat = floorDat;
 	}
+	
+	/**
+	 * Go up from the specified floor 
+	 * @param floorNum
+	 */
+	public void goUp(int floorNum) {
+		getFloor(floorNum).pressUp();
+		send(getFloor(floorNum).getFloorData());
+	}
+	
+	/**
+	 * Go down from the specified floor
+	 * @param floorNum
+	 */
+	public void goDown(int floorNum) {
+		getFloor(floorNum).pressDown();
+		send(getFloor(floorNum).getFloorData());
+	}
 
 	/**
 	 * Return the last received scheduler data packet
@@ -201,6 +219,20 @@ public class FloorSubsystem {
 	public void print(String message) {
 		System.out.println(message);
 	}
+	
+	/**
+	 * Sleep for the specified time
+	 * @param ms
+	 */
+	public void wait(int ms) {
+		try {
+			Thread.sleep(ms);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
 
 	public static void main(String args[]) {
 
@@ -214,53 +246,18 @@ public class FloorSubsystem {
 		 * For now, hard code simulation data.
 		 */
 
-		//Request to go up from floor 1, should send elevator
-		//c.getFloor(1).pressUp();
-		//c.send(c.getFloor(1).getFloorData());
+		c.goUp(4);
+		c.wait(5000);
 
-		c.getFloor(4).pressUp();
-		c.send(c.getFloor(4).getFloorData());
+		c.goUp(2);
+		c.wait(5000);
 
-		try {
-			Thread.sleep(25000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		c.getFloor(2).pressUp();
-		c.send(c.getFloor(2).getFloorData());
-
-		//		try {
-		//			Thread.sleep(25000);
-		//		} catch (InterruptedException e) {
-		//			// TODO Auto-generated catch block
-		//			e.printStackTrace();
-		//		}
-		//		
-		//		c.getFloor(3).pressDown();
-		//		c.send(c.getFloor(3).getFloorData());
-		//
-		//		try {
-		//			Thread.sleep(25000);
-		//		} catch (InterruptedException e) {
-		//			// TODO Auto-generated catch block
-		//			e.printStackTrace();
-		//		}
-		//
-		//		c.getFloor(1).pressUp();
-		//		c.send(c.getFloor(1).getFloorData());
-		//		
-		//		try {
-		//			Thread.sleep(25000);
-		//		} catch (InterruptedException e) {
-		//			// TODO Auto-generated catch block
-		//			e.printStackTrace();
-		//		}
-		//
-		//		c.getFloor(2).pressUp();
-		//		c.send(c.getFloor(2).getFloorData());
-
+		c.goUp(1);
+		c.wait(5000);
+		
+		c.goDown(5);
+		c.wait(5000);
+		
 		c.closeSocket();
 	}
 }

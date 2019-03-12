@@ -166,7 +166,7 @@ public class Elevator extends Thread {
 				openDoor();
 				if (!reqFloors.isEmpty()) {
 					print("Arrived at floor " + currFloor + ".\n");
-					reqFloors.remove(0);
+					reqFloors.remove(new Integer(currFloor));
 				} 
 				break;
 		}

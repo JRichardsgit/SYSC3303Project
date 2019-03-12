@@ -202,6 +202,7 @@ public class ElevatorSubsystem extends Thread {
 	
 
 	public static void main(String args[]) {
+		//Initialize a system with 5 floors and 2 elevators
 		ElevatorSubsystem c = new ElevatorSubsystem(5, 2);
 		c.start();
 	}
