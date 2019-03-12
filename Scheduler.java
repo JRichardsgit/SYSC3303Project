@@ -146,14 +146,9 @@ public class Scheduler {
 			ooStream.flush();
 			byte msg[] = baoStream.toByteArray();
 
-<<<<<<< HEAD
 			elevatorSendPacket = new DatagramPacket(msg, msg.length, receivePacket.getAddress(), targetPort);
 
-=======
-			elevatorSendPacket = new DatagramPacket(msg, msg.length, receivePacket.getAddress(), 2000);// elevatorSubsystem
-			// server
-			// port
->>>>>>> 908980289cefb4f7ed788844eb25abfc35e10041
+
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -275,15 +270,6 @@ public class Scheduler {
 		SchedulerData s = null;
 		int errType = e.getErrorType();
 		int currentFloor = e.getCurrentFloor();
-<<<<<<< HEAD
-=======
-
-		// If elevator is on the current requested floor
-		if (e.getRequestedFloors().contains(currentFloor)) {
-			//If motor is still active, stop and open doors
-			print("SIGNAL STOP to Elevator: " + e.getElevatorNumber() + ".");
-			s = new SchedulerData(e.getElevatorNumber(), SchedulerData.STOP_REQUEST, false, false, true);
->>>>>>> 908980289cefb4f7ed788844eb25abfc35e10041
 
 		switch(errType) {
 		case ElevatorData.NO_ERROR:
@@ -520,28 +506,6 @@ public class Scheduler {
 	public void routeElevator() {
 
 		potentialRoutes = new ArrayList<ElevatorData>();
-<<<<<<< HEAD
-		ArrayList<ElevatorData> optimalRoutes = new ArrayList<ElevatorData>();
-
-		//If an elevator is on the same floor, send the first one by default
-		if (elevatorSameFloor()) {
-			routedElevator = potentialRoutes.get(0).getElevatorNumber();
-		}
-
-		//If all are above or below, send the closest
-		else if (allElevatorsAboveFloor() || allElevatorsBelowFloor()) {
-			routedElevator = closestElevator();
-		}
-
-		//Else, just send the closest one out of all the elevators
-		else if (elevatorAboveFloor() || elevatorBelowFloor()) {
-			for (ElevatorData e: elevData) {
-				potentialRoutes.add(e);
-			}
-
-			routedElevator = closestElevator();
-		}
-=======
 		ArrayList<FloorData> completedRequests = new ArrayList<FloorData>();
 		routedElevator = -1;
 		
@@ -551,8 +515,6 @@ public class Scheduler {
 				determineIdle();
 				routedElevator = potentialRoutes.get(0).getElevatorNumber(); //Return first elevator
 			}
->>>>>>> 908980289cefb4f7ed788844eb25abfc35e10041
-
 			//If all are above 
 			else if (allElevatorsAboveFloor(fd.getFloorNum())) {
 				if(isAnyMovingDown() && fd.downPressed()) { //determine if any elevators are moving down
