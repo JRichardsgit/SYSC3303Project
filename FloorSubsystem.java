@@ -3,12 +3,23 @@
  * The Implementation of the FloorSubsystem Class
  */
 
+import java.awt.BorderLayout;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.Font;
 import java.io.*;
 import java.net.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+
+import javax.swing.BorderFactory;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.text.DefaultCaret;
 
 public class FloorSubsystem {
 
@@ -19,6 +30,9 @@ public class FloorSubsystem {
 	//Data Structures for relaying data
 	private FloorData floorDat;
 	private SchedulerData scheDat;
+	
+	// GUI
+	private JTextArea floorSystemLog;
 
 	//List of floors
 	private Floor floors[];
@@ -43,6 +57,46 @@ public class FloorSubsystem {
 		for (int i = 0; i < numFloors; i ++) {
 			floors[i] = new Floor(i + 1, this);
 		}
+		
+		createAndShowGUI();
+	}
+	
+public void createAndShowGUI() {
+		
+		//Create the Text Area
+	    floorSystemLog = new JTextArea();
+	    floorSystemLog.setFont(new Font("Arial", Font.ROMAN_BASELINE, 20));
+	    floorSystemLog.setLineWrap(true);
+	    floorSystemLog.setWrapStyleWord(true);
+        JScrollPane areaScrollPane = new JScrollPane(floorSystemLog);
+        areaScrollPane.setVerticalScrollBarPolicy(
+                        JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        areaScrollPane.setPreferredSize(new Dimension(800, 500));
+        areaScrollPane.setBorder(
+            BorderFactory.createCompoundBorder(
+                BorderFactory.createCompoundBorder(
+                                BorderFactory.createEmptyBorder(),
+                                BorderFactory.createEmptyBorder(5,5,5,5)),
+                areaScrollPane.getBorder()));
+        
+        DefaultCaret caret = (DefaultCaret) floorSystemLog.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+ 
+		JPanel schedulerPanel = new JPanel(new BorderLayout());
+		schedulerPanel.add(areaScrollPane, BorderLayout.CENTER);
+		
+		 //Create and set up the window.
+        JFrame frame = new JFrame("Floor Subsystem Log");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+ 
+        //Create and set up the content pane.
+        Container newContentPane = schedulerPanel;
+        frame.setContentPane(newContentPane);
+        frame.setPreferredSize(new Dimension(800, 500));
+        frame.setLocation(100, 550);
+        //Display the window.
+        frame.pack();
+        frame.setVisible(true);
 	}
 
 	/**
@@ -69,8 +123,8 @@ public class FloorSubsystem {
 			// Send the datagram packet to the server via the send/receive socket.
 			sendReceiveSocket.send(sendPacket);
 
-			print("FloorSubsystem: Request sent to scheduler.\n");
-			print("Containing:\n " + floorDat.getStatus() + "\n");
+			print("FloorSubsystem: Request sent to scheduler.");
+			print("Containing:\n	" + floorDat.getStatus() + "\n");
 
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
@@ -195,7 +249,7 @@ public class FloorSubsystem {
 	 * @param message
 	 */
 	public void print(String message) {
-		System.out.println(message);
+		floorSystemLog.append(" " + message + "\n");
 	}
 	
 	/**

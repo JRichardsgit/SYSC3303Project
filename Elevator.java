@@ -1,29 +1,21 @@
+import java.awt.BorderLayout;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.Font;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Random;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.*;
+
+import javax.swing.BorderFactory;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.text.DefaultCaret;
 
 /**
  * Elevator Node Implementation
  */
 public class Elevator extends Thread {
-
-	// Socket and Packet
-	DatagramPacket sendPacket, receivePacket;
-	DatagramSocket sendSocket, receiveSocket;
-
-	// Port
-	private int port;
-
-	// Scheduler address for sending packets
-	private InetAddress schedulerAddress;
 
 	// Scheduler Packet Data
 	private SchedulerData scheDat;
@@ -45,25 +37,33 @@ public class Elevator extends Thread {
 	private boolean shutdown;
 	// Door stuck flag
 	private boolean doorStuck;
+	// Elevator Ready flag
+	private boolean actionReady;
 
 	// Reference to Elevator Subsystem
 	private ElevatorSubsystem eSystem;
+
+	// Reference to the communicator
+	private ElevatorCommunicator communicator;
 
 	// Floor Information
 	private ArrayList<Integer> reqFloors;
 	private ArrayList<Integer> destFloors[];
 	private int currFloor;
 
-	//Ready flag
-	private boolean actionReady;
+	// Reply required from scheduler
+	private boolean replyRequired;
 
-	//Error List
+	// Error List
 	private ArrayList<ErrorEvent> errorList;
 
-	//FloorTimers
+	// FloorTimers
 	private final long initializedTime;
 	private long startTime, endTime, elapsedTime;
 	private long expectedTime;
+
+	// GUI
+	private JTextArea elevatorLog;
 
 	/**
 	 * Creates a new elevator node
@@ -74,31 +74,15 @@ public class Elevator extends Thread {
 	 *            reference to the elevator subsystem
 	 */
 	public Elevator(int elevatorNum, int numFloors, ElevatorSubsystem eSystem, int port) {
-		try {
-			// Construct a datagram socket and bind it to any available
-			// port on the local host machine. This socket will be used to
-			// send UDP Datagram packets.
-			sendSocket = new DatagramSocket();
 
-			// Construct a datagram socket and bind it to the specified port
-			// port on the local host machine. This socket will be used to
-			// receive UDP Datagram packets.
-			receiveSocket = new DatagramSocket(port);
-
-		} catch (SocketException se) {
-			se.printStackTrace();
-			System.exit(1);
-		}
 
 		this.elevatorNum = elevatorNum;
 		this.numFloors = numFloors;
 		this.eSystem = eSystem;
-		this.port = port;
 		movingUp = false;
 		movingDown = false;
 		doorOpen = false;
 		currFloor = 1;
-		actionReady = false;
 		shutdown = false;
 		doorStuck = false;
 		reqFloors = new ArrayList<Integer>();
@@ -107,19 +91,56 @@ public class Elevator extends Thread {
 		initializedTime = System.nanoTime();
 		expectedTime = 10000;
 
+		createAndShowGUI();
+
+		communicator = new ElevatorCommunicator(port, this);
+		communicator.start();
+
 		for (int i = 0; i < numFloors; i ++) {
 			destFloors[i] = new ArrayList<Integer>();
 		}
 
 	}
 
-	/**
-	 * Set the scheduler address for sending packets
-	 * @param address
-	 */
-	public void setSchedulerAddress(InetAddress address) {
-		schedulerAddress = address;
+	public void createAndShowGUI() {
+
+		//Create the Text Area
+		elevatorLog = new JTextArea();
+		elevatorLog.setFont(new Font("Arial", Font.ROMAN_BASELINE, 20));
+		elevatorLog.setLineWrap(true);
+		elevatorLog.setWrapStyleWord(true);
+		JScrollPane areaScrollPane = new JScrollPane(elevatorLog);
+		areaScrollPane.setVerticalScrollBarPolicy(
+				JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+		areaScrollPane.setPreferredSize(new Dimension(800, 500));
+		areaScrollPane.setBorder(
+				BorderFactory.createCompoundBorder(
+						BorderFactory.createCompoundBorder(
+								BorderFactory.createEmptyBorder(),
+								BorderFactory.createEmptyBorder(5,5,5,5)),
+						areaScrollPane.getBorder()));
+
+		DefaultCaret caret = (DefaultCaret) elevatorLog.getCaret();
+		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+
+		JPanel schedulerPanel = new JPanel(new BorderLayout());
+		schedulerPanel.add(areaScrollPane, BorderLayout.CENTER);
+
+		//Create and set up the window.
+		JFrame frame = new JFrame("Elevator " + elevatorNum + " Log");
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+		//Create and set up the content pane.
+		Container newContentPane = schedulerPanel;
+
+		frame.setContentPane(newContentPane);
+		frame.setPreferredSize(new Dimension(800, 500));
+		frame.setLocation(900, 50 + (500 * elevatorNum));
+		//Display the window.
+		frame.pack();
+		frame.setVisible(true);
 	}
+
 
 	/**
 	 * Add an error event to the errorList
@@ -137,100 +158,33 @@ public class Elevator extends Thread {
 		return shutdown;
 	}
 
-	/**
-	 * Send a packet to the scheduler
-	 */
-	public void send() {
-
-		ElevatorData elevDat = getElevatorData();
-
-		try {
-			// Convert the ElevatorData object into a byte array
-			ByteArrayOutputStream baoStream = new ByteArrayOutputStream();
-			ObjectOutputStream ooStream = new ObjectOutputStream(new BufferedOutputStream(baoStream));
-			ooStream.flush();
-			ooStream.writeObject(elevDat);
-			ooStream.flush();
-
-			byte msg[] = baoStream.toByteArray();
-			sendPacket = new DatagramPacket(msg, msg.length, schedulerAddress, 3000);
-
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-
-		// Send the datagram packet to the client via the send socket.
-		try {
-			sendSocket.send(sendPacket);
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
-
-		print("Sent packet to scheduler.\nContaining:\n	" + elevDat.getStatus() + "\n");
-	}
-
-	/**
-	 * Receive a packet from the scheduler
-	 */
-	public void receive() {
-		// Construct a DatagramPacket for receiving packets up
-		// to 5000 bytes long (the length of the byte array).
-
-		byte data[] = new byte[5000];
-		receivePacket = new DatagramPacket(data, data.length);
-		// Block until a datagram packet is received from receiveSocket.
-		try {
-			receiveSocket.receive(receivePacket);
-			schedulerAddress = receivePacket.getAddress();
-
-		} catch (IOException e) {
-			print("IO Exception: likely:");
-			print("Receive Socket Timed Out.\n" + e);
-			e.printStackTrace();
-			System.exit(1);
-		}
-
-		try {
-			//Retrieve the ElevatorData object from the receive packet
-			ByteArrayInputStream byteStream = new ByteArrayInputStream(data);
-			ObjectInputStream is;
-			is = new ObjectInputStream(new BufferedInputStream(byteStream));
-			Object o = is.readObject();
-			is.close();
-
-			scheDat = (SchedulerData) o;
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		processPacket();
-	}
 
 	/**
 	 * Process the received scheduler packet
 	 */
-	public void processPacket() {
-		SchedulerData s = scheDat;
+	public void processPacket(SchedulerData s) {
+		scheDat = s;
 		int mode = s.getMode();
+		actionReady = false;
+
 		switch (mode) {
 		case SchedulerData.CONTINUE_REQUEST:
-			print("Received CONTINUE request.\n");
+			print("Received CONTINUE request.");
 			//Elevator's motor flags and door flags remain unchanged
 			break;
 
 		case SchedulerData.FLOOR_REQUEST:
-			print("Received FLOOR request.\n");
+			print("Received FLOOR request.");
 			int floor = s.getReqFloor();
 
 			//Add the requested floor to the list
-			if (!reqFloors.contains(floor))
+			if (!reqFloors.contains(floor)) {
 				reqFloors.add(floor);
+				Collections.sort(reqFloors);
+				if (movingDown)
+					Collections.reverse(reqFloors);
+			}
+
 
 			//Update the destination floors for the requested floor
 			//(floor requests that will be added when the elevator reaches that floor)
@@ -240,7 +194,7 @@ public class Elevator extends Thread {
 			break;
 
 		case SchedulerData.MOVE_REQUEST:
-			print("Received MOVE request.\n");
+			print("Received MOVE request.");
 			if (doorOpen) //If door open, close the door before moving
 				closeDoor();
 
@@ -252,7 +206,7 @@ public class Elevator extends Thread {
 			break;
 
 		case SchedulerData.STOP_REQUEST:
-			print("Received STOP request.\n");
+			print("Received STOP request.");
 			//Stop the motor and open the door
 			stopMotor();
 			openDoor();
@@ -270,30 +224,33 @@ public class Elevator extends Thread {
 				//Clear the destination floors from that floor
 				destFloors[currFloor - 1].clear();
 			}
-			send();
+			replyRequired = true;
+			communicator.send();
 			break;
 		case SchedulerData.DOOR_REQUEST:
-			print("Received DOOR request.\n");
+			print("Received DOOR request.");
 			//Will proceed to opening/closing it's doors
 			break;
 		}
+
+		//Update the scheduler with current status if it changed
+		if (mode != SchedulerData.CONTINUE_REQUEST && mode != SchedulerData.DOOR_REQUEST) {
+			replyRequired = false;
+			communicator.send();
+		}
+
+		actionReady = true;
 	}
 
 	/**
-	 * Wait until the scheduler sends a request
+	 * Wait until the scheduler sends further instruction (not a floor request)
 	 */
 	public void waitForInstruction() {
-		//Set wait flag true
-		//eSystem.setPending(elevatorNum, true);
 		print("Awaiting Instruction.\n");
-		receive();
-		/*
-		while (eSystem.isPending(elevatorNum)) {
-			wait(1000);
-		}
-		 */
-		//Ready for another action
-		actionReady = true;
+
+		do {
+			wait(2000);
+		} while (scheDat.getMode() == SchedulerData.FLOOR_REQUEST && !actionReady);
 	}
 
 	/**
@@ -317,7 +274,8 @@ public class Elevator extends Thread {
 						print("Stuck between floors " + currFloor + " and " + (currFloor - 1) + ".");
 					}
 					shutdown = true;
-					send();
+					communicator.send();
+					print("SHUTTING DOWN...");
 				}
 			}
 
@@ -339,10 +297,6 @@ public class Elevator extends Thread {
 				wait(1000);
 			}
 		} 
-
-		//If the elevator has just stopped and there are no more outstanding requests
-		if (reqFloors.isEmpty())
-			actionReady = false;
 	}
 
 	/**
@@ -382,8 +336,8 @@ public class Elevator extends Thread {
 	 * Set the flag for opening the elevator doors
 	 */
 	public void openDoor() {
-		actionReady = false;
 		print("Opening doors.");
+		actionReady = false;
 
 		if (!errorList.isEmpty()) {
 			ErrorEvent e = errorList.get(0);
@@ -391,8 +345,16 @@ public class Elevator extends Thread {
 			if (e.getType() == ErrorEvent.DOOR_STUCK) {
 				doorStuck = true;
 				wait(2000);
-				send();
-				waitForInstruction();
+				print("Doors STUCK.");
+
+				replyRequired = true;
+				communicator.send();
+
+				do {
+					communicator.receive();
+					wait(2000);
+				} while (scheDat.getMode() != SchedulerData.DOOR_REQUEST);
+
 				errorList.remove(0);
 			}
 		}
@@ -408,16 +370,24 @@ public class Elevator extends Thread {
 	 * Set the flag for closing the elevator doors
 	 */
 	public void closeDoor() {
-		actionReady = false;
 		print("Closing doors.");
+		actionReady = false;
 
 		if (!errorList.isEmpty()) {
 			ErrorEvent e = errorList.get(0);
 			if (e.getType() == ErrorEvent.DOOR_STUCK) {
 				doorStuck = true;
 				wait(2000);
-				send();
-				waitForInstruction();
+				print("Doors STUCK.");
+
+				replyRequired = true;
+				communicator.send();
+				communicator.receive();
+
+				do {
+					wait(2000);
+				} while (scheDat.getMode() != SchedulerData.DOOR_REQUEST);
+
 				errorList.remove(0);
 			}
 		}
@@ -446,8 +416,8 @@ public class Elevator extends Thread {
 			errType = ElevatorData.NO_ERROR;
 		}
 
-		return new ElevatorData(elevatorNum, port, errType, currFloor, 
-				reqFloors, movingUp, movingDown, doorOpen, shutdown);
+		return new ElevatorData(elevatorNum, errType, currFloor, 
+				reqFloors, movingUp, movingDown, doorOpen, shutdown, replyRequired);
 	}
 
 	/**
@@ -468,29 +438,20 @@ public class Elevator extends Thread {
 	 * @param message the message to be printed
 	 */
 	public void print(String message) {
-		System.out.println("Elevator " + elevatorNum + ": " + message);
+		elevatorLog.append(" Elevator " + elevatorNum + ": " + message + "\n");
 	}
 
 	@Override
 	public void run() {
 
 		print("Started.");
-		waitForInstruction();
 
 		while (true) {
 			//If there are requested floors, and the elevator is ready to move
 			//(Doors are closed/no pending requests)
-			if (!reqFloors.isEmpty() && actionReady) {
+			if (!reqFloors.isEmpty() && !shutdown && !doorStuck && actionReady) {
 				startTime = System.currentTimeMillis();
 				moveOneFloor();
-
-				if (!shutdown) {
-					//Update the scheduler about current status
-					send();
-					//Pending for further instruction from the scheduler
-					waitForInstruction();
-				}
-
 				//Measure the time it took for the elevator to receive the instruction
 				endTime = System.currentTimeMillis();
 				elapsedTime = endTime - startTime;
@@ -501,6 +462,15 @@ public class Elevator extends Thread {
 				//trigger elevator stuck event
 				if (elapsedTime > expectedTime) {
 					errorList.add(0, new ErrorEvent(ErrorEvent.ELEVATOR_STUCK, 0));
+				}
+
+				if (!shutdown) {
+					//Update the scheduler about current status
+					replyRequired = true;
+					communicator.send();
+
+					//Pending for reply from Scheduler
+					waitForInstruction();
 				}
 			}
 			//Slow down a bit

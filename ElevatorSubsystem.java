@@ -180,6 +180,7 @@ public class ElevatorSubsystem extends Thread {
 	public void loadErrors() {
 		//Hard Coded error events
 		elevatorList[0].addError(new ErrorEvent(ErrorEvent.DOOR_STUCK, 5000));
+		elevatorList[1].addError(new ErrorEvent(ErrorEvent.ELEVATOR_STUCK, 100000));
 		
 	}
 	
@@ -219,7 +220,6 @@ public class ElevatorSubsystem extends Thread {
 		loadErrors();
 		
 		for (Elevator e: elevatorList) {
-			
 			e.start();
 		}
 	}

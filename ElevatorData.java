@@ -19,8 +19,8 @@ public class ElevatorData implements Serializable {
 	private boolean doorOpened; //door flag (open/closed)
 	private boolean shutdown; // shutdown flag
 	private int errorType; // the error type
+	private boolean replyRequired; // flag for no response required
 	private String status; //status for console messages
-	private int port; // port for sending
 
 	/**
 	 * Constructor for the ElevatorData object
@@ -32,9 +32,10 @@ public class ElevatorData implements Serializable {
 	 * @param movingDown 
 	 * @param doorOpened
 	 */
-	public ElevatorData(int elevatorNum, int port, int errorType, int currFloor, 
+	public ElevatorData(int elevatorNum, int errorType, int currFloor, 
 			ArrayList<Integer> reqFloor, boolean movingUp, boolean movingDown, 
-			boolean doorOpened, boolean shutdown) {
+			boolean doorOpened, boolean shutdown, boolean replyRequired) {
+		
 		this.elevatorNum = elevatorNum;
 		this.errorType = errorType;
 		this.currFloor = currFloor;
@@ -43,7 +44,7 @@ public class ElevatorData implements Serializable {
 		this.movingDown = movingDown;
 		this.doorOpened = doorOpened;
 		this.shutdown = shutdown;
-		this.port = port;
+		this.replyRequired = replyRequired;
 
 		switch(errorType) {
 		case NO_ERROR:
@@ -169,11 +170,14 @@ public class ElevatorData implements Serializable {
 	}
 	
 	/**
-	 * Returns the port of the elevator
-	 * @return
+	 * Return true if a reply from the scheduler is required
+	 * @return true if a reply from the scheduler is required
 	 */
-	public int getPort() {
-		return port;
+	public boolean replyRequired() {
+		return replyRequired;
 	}
+	
+	
+
 
 }
