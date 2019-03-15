@@ -20,7 +20,7 @@ public class ElevatorCommunicator extends Thread {
 
 	// Scheduler address for sending packets
 	private InetAddress schedulerAddress;
-	
+
 	public ElevatorCommunicator(int port, Elevator e) {
 		try {
 			// Construct a datagram socket and bind it to any available
@@ -37,10 +37,10 @@ public class ElevatorCommunicator extends Thread {
 			se.printStackTrace();
 			System.exit(1);
 		}
-		
+
 		elevator = e;
 	}
-	
+
 	/**
 	 * Set the scheduler address for sending packets
 	 * @param address
@@ -48,7 +48,7 @@ public class ElevatorCommunicator extends Thread {
 	public void setSchedulerAddress(InetAddress address) {
 		schedulerAddress = address;
 	}
-	
+
 	/**
 	 * Send a packet to the scheduler
 	 */
@@ -90,41 +90,48 @@ public class ElevatorCommunicator extends Thread {
 		// Construct a DatagramPacket for receiving packets up
 		// to 5000 bytes long (the length of the byte array).
 
-		byte data[] = new byte[5000];
-		receivePacket = new DatagramPacket(data, data.length);
-		// Block until a datagram packet is received from receiveSocket.
-		try {
-			elevator.print("Waiting for packet...");
-			receiveSocket.receive(receivePacket);
-			schedulerAddress = receivePacket.getAddress();
+		if (elevator.getElevatorData().isOperational()) {
 
-		} catch (IOException e) {
-			elevator.print("IO Exception: likely:");
-			elevator.print("Receive Socket Timed Out.\n" + e);
-			e.printStackTrace();
-			System.exit(1);
-		}
+			byte data[] = new byte[5000];
+			receivePacket = new DatagramPacket(data, data.length);
+			// Block until a datagram packet is received from receiveSocket.
+			try {
+				elevator.print("Waiting for packet...");
+				receiveSocket.receive(receivePacket);
+				schedulerAddress = receivePacket.getAddress();
 
-		try {
-			//Retrieve the ElevatorData object from the receive packet
-			ByteArrayInputStream byteStream = new ByteArrayInputStream(data);
-			ObjectInputStream is;
-			is = new ObjectInputStream(new BufferedInputStream(byteStream));
-			Object o = is.readObject();
-			is.close();
+			} catch (IOException e) {
+				elevator.print("IO Exception: likely:");
+				elevator.print("Receive Socket Timed Out.\n" + e);
+				e.printStackTrace();
+				System.exit(1);
+			}
 
-			scheDat = (SchedulerData) o;
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+			try {
+				//Retrieve the ElevatorData object from the receive packet
+				ByteArrayInputStream byteStream = new ByteArrayInputStream(data);
+				ObjectInputStream is;
+				is = new ObjectInputStream(new BufferedInputStream(byteStream));
+				Object o = is.readObject();
+				is.close();
+
+				scheDat = (SchedulerData) o;
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			elevator.processPacket(scheDat);
+		}	
 		
-		elevator.processPacket(scheDat);
+		else {
+			closeSockets();
+		}
 	}
-	
+
 	/**
 	 * Simulate waiting time for elevator actions, and for delays
 	 * @param ms the time to wait, in milliseconds
@@ -139,7 +146,14 @@ public class ElevatorCommunicator extends Thread {
 	}
 
 
-	
+	/**
+	 * Close sockets
+	 */
+	public void closeSockets() {
+		receiveSocket.close();
+		sendSocket.close();
+	}
+
 	public void run() {
 		while (true) {
 			receive();
