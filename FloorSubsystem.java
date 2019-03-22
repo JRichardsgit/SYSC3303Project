@@ -26,6 +26,9 @@ public class FloorSubsystem {
 	//Sockets and Packets
 	DatagramPacket sendPacket, receivePacket;
 	DatagramSocket sendReceiveSocket;
+	
+	//IP address
+	InetAddress address;
 
 	//Data Structures for relaying data
 	private FloorData floorDat;
@@ -36,6 +39,8 @@ public class FloorSubsystem {
 
 	//List of floors
 	private Floor floors[];
+	
+	
 
 	/**
 	 * Create a new floor subsystem
@@ -56,6 +61,13 @@ public class FloorSubsystem {
 
 		for (int i = 0; i < numFloors; i ++) {
 			floors[i] = new Floor(i + 1, this);
+		}
+		
+		try {
+			address = InetAddress.getByName("172.17.133.42");
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 		createAndShowGUI();
@@ -118,8 +130,8 @@ public void createAndShowGUI() {
 			byte msg[] = baoStream.toByteArray();
 
 			// Construct a datagram packet that is to be sent to a specified port
-			sendPacket = new DatagramPacket(msg, msg.length, InetAddress.getLocalHost(), 3000);
-
+			sendPacket = new DatagramPacket(msg, msg.length, address, 3000);
+			
 			// Send the datagram packet to the server via the send/receive socket.
 			sendReceiveSocket.send(sendPacket);
 

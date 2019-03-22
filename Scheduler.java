@@ -16,6 +16,9 @@ public class Scheduler {
 	// Packets and Sockets
 	DatagramPacket floorSendPacket, elevatorSendPacket, receivePacket;
 	DatagramSocket sendSocket, receiveSocket;
+	
+	//IP Address
+	InetAddress address;
 
 	//Queue for received packets
 	ArrayList<DatagramPacket> receiveQueue;
@@ -64,6 +67,13 @@ public class Scheduler {
 		} catch (SocketException se) {
 			se.printStackTrace();
 			System.exit(1);
+		}
+		
+		try {
+			address = InetAddress.getByName("172.17.133.42");
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 
 		receiveQueue = new ArrayList<DatagramPacket>();
@@ -188,7 +198,7 @@ public class Scheduler {
 			ooStream.flush();
 			byte msg[] = baoStream.toByteArray();
 
-			elevatorSendPacket = new DatagramPacket(msg, msg.length, receivePacket.getAddress(), targetPort);
+			elevatorSendPacket = new DatagramPacket(msg, msg.length, address, targetPort);
 
 
 		} catch (IOException e1) {
