@@ -11,6 +11,7 @@ import java.io.*;
 import java.net.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -40,7 +41,9 @@ public class FloorSubsystem {
 	//List of floors
 	private Floor floors[];
 	
+	private FloorParser fp;
 	
+	ArrayList<String[]> commands;
 
 	/**
 	 * Create a new floor subsystem
@@ -64,12 +67,12 @@ public class FloorSubsystem {
 		}
 		
 		try {
-			address = InetAddress.getByName("172.17.2.125");
+			address = InetAddress.getByName("172.17.133.42");
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+		fp = new FloorParser();
 		createAndShowGUI();
 	}
 	
@@ -276,15 +279,34 @@ public void createAndShowGUI() {
 			e.printStackTrace();
 		}
 	}
-
+	public void processParser() {
+		fp.start();
+		
+		while(!commands.isEmpty()) {
+			String[] current = commands.get(0);
+			String instruction = current[2];
+			if(instruction.equalsIgnoreCase("up")) {
+				goUp(Integer.parseInt(current[1]), Integer.parseInt(current[3]));
+			}else {
+				goDown(Integer.parseInt(current[1]), Integer.parseInt(current[3]));
+			}
+		}
+		
+	}
 
 	public static void main(String args[]) {
 
 		//Create a floor subsystem with 5 floors
 		FloorSubsystem c = new FloorSubsystem(5);
-		
-		
 
+		/**
+		 * FLOOR SIMULATION
+		 * 
+		 * Floor simulation data now read in by input file.
+		 */
+		
+		
+		
 		/**
 		 * FLOOR SIMULATION
 		 *
@@ -292,17 +314,19 @@ public void createAndShowGUI() {
 		 * For now, hard code simulation data.
 		 */
 
-		c.goUp(4, 5);
-		c.wait(5000);
-
-		c.goUp(2, 4);
-		c.wait(5000);
-
-		c.goUp(1, 3);
-		c.wait(5000);
 		
-		c.goDown(5, 1);
-		c.wait(5000);
+		
+//		c.goUp(4, 5);
+//		c.wait(5000);
+//
+//		c.goUp(2, 4);
+//		c.wait(5000);
+//
+//		c.goUp(1, 3);
+//		c.wait(5000);
+//		
+//		c.goDown(5, 1);
+//		c.wait(5000);
 		
 		c.closeSocket();
 	}
