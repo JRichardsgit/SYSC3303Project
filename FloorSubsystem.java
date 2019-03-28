@@ -64,7 +64,7 @@ public class FloorSubsystem {
 		}
 		
 		try {
-			address = InetAddress.getByName("172.17.133.42");
+			address = InetAddress.getByName("172.17.2.125");
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -282,6 +282,8 @@ public void createAndShowGUI() {
 
 		//Create a floor subsystem with 5 floors
 		FloorSubsystem c = new FloorSubsystem(5);
+		
+		
 
 		/**
 		 * FLOOR SIMULATION
