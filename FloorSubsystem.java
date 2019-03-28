@@ -281,7 +281,8 @@ public void createAndShowGUI() {
 	}
 	public void processParser() {
 		fp.start();
-		
+		wait(1000);
+		commands = fp.getInstructions();
 		while(!commands.isEmpty()) {
 			String[] current = commands.get(0);
 			String instruction = current[2];
@@ -290,6 +291,8 @@ public void createAndShowGUI() {
 			}else {
 				goDown(Integer.parseInt(current[1]), Integer.parseInt(current[3]));
 			}
+			commands.remove(0);
+			wait(1000);
 		}
 		
 	}
@@ -305,7 +308,7 @@ public void createAndShowGUI() {
 		 * Floor simulation data now read in by input file.
 		 */
 		
-		
+		c.processParser();
 		
 		/**
 		 * FLOOR SIMULATION
