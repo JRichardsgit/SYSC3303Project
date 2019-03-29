@@ -15,8 +15,8 @@ public class FloorParser{
 	public int requests = 4;
 	public int floors = 22;
 	public String[][] instructions= new String[requests][fields]; 
-	private Queue<String>[] upQ;
-	private Queue<String>[] downQ;
+	public Queue<String>[] upQ;
+	public Queue<String>[] downQ;
 	
 
 	public void Parse(String file) throws FileNotFoundException {
