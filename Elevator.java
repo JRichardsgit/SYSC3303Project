@@ -247,10 +247,14 @@ public class Elevator extends Thread {
 	 */
 	public void waitForInstruction() {
 		print("Awaiting Instruction.\n");
-
+		long startTime = System.currentTimeMillis();
 		do {
 			wait(2000);
 		} while (scheDat.getMode() == SchedulerData.FLOOR_REQUEST && !actionReady);
+		//Measure the time it took for the elevator to receive the instruction
+		long endTime = System.currentTimeMillis();
+		long elapsedTime = endTime - startTime;
+		print("Time for instruction: " + elapsedTime + " ms.");
 	}
 
 	/**
