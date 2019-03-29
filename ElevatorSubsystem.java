@@ -217,7 +217,7 @@ public class ElevatorSubsystem extends Thread {
 		/**
 		 * Elevator subsystem logic
 		 */
-		loadErrors();
+		//loadErrors();
 		
 		for (Elevator e: elevatorList) {
 			e.start();
