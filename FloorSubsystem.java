@@ -279,23 +279,7 @@ public void createAndShowGUI() {
 			e.printStackTrace();
 		}
 	}
-	public void processParser() {
-		fp.start();
-		wait(1000);
-		commands = fp.getInstructions();
-		while(!commands.isEmpty()) {
-			String[] current = commands.get(0);
-			String instruction = current[2];
-			if(instruction.equalsIgnoreCase("up")) {
-				goUp(Integer.parseInt(current[1]), Integer.parseInt(current[3]));
-			}else {
-				goDown(Integer.parseInt(current[1]), Integer.parseInt(current[3]));
-			}
-			commands.remove(0);
-			wait(1000);
-		}
-		
-	}
+	
 
 	public static void main(String args[]) {
 
@@ -308,28 +292,26 @@ public void createAndShowGUI() {
 		 * Floor simulation data now read in by input file.
 		 */
 		
-		c.processParser();
-		
-		/**
-		 * FLOOR SIMULATION
-		 *
-		 * Floor simulation data to be later read in by input file.
-		 * For now, hard code simulation data.
-		 */
+		FloorParser parser = new FloorParser();
+		parser.Parse("test1");
+		parser.dispatch();
 
-		
-		
-//		c.goUp(4, 5);
-//		c.wait(5000);
-//
-//		c.goUp(2, 4);
-//		c.wait(5000);
-//
-//		c.goUp(1, 3);
-//		c.wait(5000);
-//		
-//		c.goDown(5, 1);
-//		c.wait(5000);
+		int count = 0;
+		while( count < parser.requests) {
+			for(int i = 0; i<parser.floors;i++) {
+				if (parser.upQ[i].peek().equals(parser.getSysTime())) {
+					parser.upQ[i].remove();
+					c.goUp(Integer.parseInt(parser.upQ[i].poll()), Integer.parseInt(parser.upQ[i].poll()));
+					count++;
+				}
+				else if (parser.downQ[i].peek().equals(parser.getSysTime())) {
+					parser.downQ[i].remove();
+					c.goDown(Integer.parseInt(parser.downQ[i].remove()), Integer.parseInt(parser.downQ[i].remove()));
+					count++;
+				}
+			}
+			c.wait(1000);
+		}
 		
 		c.closeSocket();
 	}
