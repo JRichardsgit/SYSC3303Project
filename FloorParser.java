@@ -15,14 +15,14 @@ public class FloorParser{
 	public int requests = 4;
 	public int floors = 22;
 	public String[][] instructions= new String[requests][fields]; 
-	private Queue<String>[] upQ;
-	private Queue<String>[] downQ;
+	public Queue<String>[] upQ;
+	public Queue<String>[] downQ;
 	
 
 	public void Parse(String file) throws FileNotFoundException {
 		String[] str = new String[fields];
 		String filename = file +".txt";
-		File events = new File("C:\\Users\\JRich\\Documents\\" + filename); // FIX ME: change path to accept github 
+		File events = new File("Assets\\" + filename); // FIX ME: change path to accept github 
 		Scanner scan = new Scanner(events); // create new scanner
 		for(int j =0; scan.hasNext();j++) { //format instructions int 2D array. j = instruction #, i = instruction type
 			for(int i =0; i<fields;i++) {

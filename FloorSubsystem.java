@@ -27,22 +27,22 @@ public class FloorSubsystem {
 	//Sockets and Packets
 	DatagramPacket sendPacket, receivePacket;
 	DatagramSocket sendReceiveSocket;
-	
+
 	//IP address
 	InetAddress address;
 
 	//Data Structures for relaying data
 	private FloorData floorDat;
 	private SchedulerData scheDat;
-	
+
 	// GUI
 	private JTextArea floorSystemLog;
 
 	//List of floors
 	private Floor floors[];
-	
+
 	private FloorParser fp;
-	
+
 	ArrayList<String[]> commands;
 
 	/**
@@ -65,7 +65,7 @@ public class FloorSubsystem {
 		for (int i = 0; i < numFloors; i ++) {
 			floors[i] = new Floor(i + 1, this);
 		}
-		
+
 		try {
 			address = InetAddress.getByName("172.17.133.42");
 		} catch (UnknownHostException e) {
@@ -75,43 +75,43 @@ public class FloorSubsystem {
 		fp = new FloorParser();
 		createAndShowGUI();
 	}
-	
-public void createAndShowGUI() {
-		
+
+	public void createAndShowGUI() {
+
 		//Create the Text Area
-	    floorSystemLog = new JTextArea();
-	    floorSystemLog.setFont(new Font("Arial", Font.ROMAN_BASELINE, 20));
-	    floorSystemLog.setLineWrap(true);
-	    floorSystemLog.setWrapStyleWord(true);
-        JScrollPane areaScrollPane = new JScrollPane(floorSystemLog);
-        areaScrollPane.setVerticalScrollBarPolicy(
-                        JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-        areaScrollPane.setPreferredSize(new Dimension(800, 500));
-        areaScrollPane.setBorder(
-            BorderFactory.createCompoundBorder(
-                BorderFactory.createCompoundBorder(
-                                BorderFactory.createEmptyBorder(),
-                                BorderFactory.createEmptyBorder(5,5,5,5)),
-                areaScrollPane.getBorder()));
-        
-        DefaultCaret caret = (DefaultCaret) floorSystemLog.getCaret();
-        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
- 
+		floorSystemLog = new JTextArea();
+		floorSystemLog.setFont(new Font("Arial", Font.ROMAN_BASELINE, 20));
+		floorSystemLog.setLineWrap(true);
+		floorSystemLog.setWrapStyleWord(true);
+		JScrollPane areaScrollPane = new JScrollPane(floorSystemLog);
+		areaScrollPane.setVerticalScrollBarPolicy(
+				JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+		areaScrollPane.setPreferredSize(new Dimension(800, 500));
+		areaScrollPane.setBorder(
+				BorderFactory.createCompoundBorder(
+						BorderFactory.createCompoundBorder(
+								BorderFactory.createEmptyBorder(),
+								BorderFactory.createEmptyBorder(5,5,5,5)),
+						areaScrollPane.getBorder()));
+
+		DefaultCaret caret = (DefaultCaret) floorSystemLog.getCaret();
+		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+
 		JPanel schedulerPanel = new JPanel(new BorderLayout());
 		schedulerPanel.add(areaScrollPane, BorderLayout.CENTER);
-		
-		 //Create and set up the window.
-        JFrame frame = new JFrame("Floor Subsystem Log");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
- 
-        //Create and set up the content pane.
-        Container newContentPane = schedulerPanel;
-        frame.setContentPane(newContentPane);
-        frame.setPreferredSize(new Dimension(800, 500));
-        frame.setLocation(100, 550);
-        //Display the window.
-        frame.pack();
-        frame.setVisible(true);
+
+		//Create and set up the window.
+		JFrame frame = new JFrame("Floor Subsystem Log");
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+		//Create and set up the content pane.
+		Container newContentPane = schedulerPanel;
+		frame.setContentPane(newContentPane);
+		frame.setPreferredSize(new Dimension(800, 500));
+		frame.setLocation(100, 550);
+		//Display the window.
+		frame.pack();
+		frame.setVisible(true);
 	}
 
 	/**
@@ -134,7 +134,7 @@ public void createAndShowGUI() {
 
 			// Construct a datagram packet that is to be sent to a specified port
 			sendPacket = new DatagramPacket(msg, msg.length, address, 3000);
-			
+
 			// Send the datagram packet to the server via the send/receive socket.
 			sendReceiveSocket.send(sendPacket);
 
@@ -198,7 +198,7 @@ public void createAndShowGUI() {
 	public void closeSocket() {
 		sendReceiveSocket.close();
 	}
-	
+
 	/**
 	 * Return the last sent floor data packet
 	 * @return the floor data
@@ -215,30 +215,30 @@ public void createAndShowGUI() {
 	public void setFloorData(FloorData floorDat) {
 		this.floorDat = floorDat;
 	}
-	
+
 	/**
 	 * Go up from the specified floor 
 	 * @param floorNum
 	 */
 	public void goUp(int currFloor, int destFloor) {
 		Floor floor = getFloor(currFloor);
-		
+
 		floor.pressUp();
 		floor.setDestination(destFloor);
-		
+
 		send(floor.getFloorData());
 	}
-	
+
 	/**
 	 * Go down from the specified floor
 	 * @param floorNum
 	 */
 	public void goDown(int currFloor, int destFloor) {
 		Floor floor = getFloor(currFloor);
-		
+
 		floor.pressDown();
 		floor.setDestination(destFloor);
-		
+
 		send(floor.getFloorData());
 	}
 
@@ -266,7 +266,7 @@ public void createAndShowGUI() {
 	public void print(String message) {
 		floorSystemLog.append(" " + message + "\n");
 	}
-	
+
 	/**
 	 * Sleep for the specified time
 	 * @param ms
@@ -279,9 +279,9 @@ public void createAndShowGUI() {
 			e.printStackTrace();
 		}
 	}
-	
 
-	public static void main(String args[]) {
+
+	public static void main(String args[]) { 
 
 		//Create a floor subsystem with 5 floors
 		FloorSubsystem c = new FloorSubsystem(5);
@@ -291,28 +291,37 @@ public void createAndShowGUI() {
 		 * 
 		 * Floor simulation data now read in by input file.
 		 */
-		
+
 		FloorParser parser = new FloorParser();
-		parser.Parse("test1");
+		try {
+			parser.Parse("floordata");
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		parser.dispatch();
 
 		int count = 0;
 		while( count < parser.requests) {
 			for(int i = 0; i<parser.floors;i++) {
-				if (parser.upQ[i].peek().equals(parser.getSysTime())) {
-					parser.upQ[i].remove();
-					c.goUp(Integer.parseInt(parser.upQ[i].poll()), Integer.parseInt(parser.upQ[i].poll()));
-					count++;
+				if(parser.upQ[i].peek() != null) {
+					if (parser.upQ[i].peek().equals(parser.getSysTime())) {
+						parser.upQ[i].remove();
+						c.goUp(Integer.parseInt(parser.upQ[i].poll()), Integer.parseInt(parser.upQ[i].poll()));
+						count++;
+					}
 				}
-				else if (parser.downQ[i].peek().equals(parser.getSysTime())) {
-					parser.downQ[i].remove();
-					c.goDown(Integer.parseInt(parser.downQ[i].remove()), Integer.parseInt(parser.downQ[i].remove()));
-					count++;
+				if(parser.downQ[i].peek() != null) {
+					if (parser.downQ[i].peek().equals(parser.getSysTime())) {
+						parser.downQ[i].remove();
+						c.goDown(Integer.parseInt(parser.downQ[i].remove()), Integer.parseInt(parser.downQ[i].remove()));
+						count++;
+					}
 				}
 			}
 			c.wait(1000);
 		}
-		
+
 		c.closeSocket();
 	}
 }

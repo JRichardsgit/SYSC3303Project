@@ -65,7 +65,7 @@ public class ElevatorCommunicator extends Thread {
 			ooStream.flush();
 
 			byte msg[] = baoStream.toByteArray();
-			sendPacket = new DatagramPacket(msg, msg.length, schedulerAddress, 3000);
+			sendPacket = new DatagramPacket(msg, msg.length, InetAddress.getLocalHost(), 3000);
 
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
