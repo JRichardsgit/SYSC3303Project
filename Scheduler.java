@@ -70,6 +70,7 @@ public class Scheduler {
 		}
 		
 		try {
+			//address = InetAddress.getByName("172.17.133.42");
 			address = InetAddress.getLocalHost();
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
