@@ -163,7 +163,7 @@ public class GUI {
 		//initialize floor titles
 		floorTitles = new JLabel[floorNum];
 		for(int i = 1; i <= floorNum; i++) {
-			floorTitles[i - 1] = new JLabel(Integer.toString(i));
+			floorTitles[i - 1] = new JLabel(Integer.toString(floorNum - i + 1));
 			floorTitles[i - 1].setHorizontalAlignment(SwingConstants.CENTER);
 			GridBagConstraints floorTitle = new GridBagConstraints();
 			floorTitle.fill = GridBagConstraints.BOTH;
@@ -300,6 +300,7 @@ public class GUI {
 			floors[elev][i].setIcon(new ImageIcon("Assets\\Shutdown.png"));
 		}
 		setDirectionInfo(elev, "Shutdown");
+		
 		setDoorsInfo(elev, 3);
 	}
 }
