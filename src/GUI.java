@@ -2,6 +2,8 @@ import java.awt.EventQueue;
 
 import javax.swing.JFrame;
 import java.awt.Toolkit;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.awt.BorderLayout;
 import javax.swing.JPanel;
@@ -9,16 +11,13 @@ import javax.swing.JTextArea;
 import javax.swing.JTextPane;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.BoxLayout;
-import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import javax.swing.border.LineBorder;
 import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
 
 import javax.swing.border.BevelBorder;
 import javax.swing.border.TitledBorder;
+
 import javax.swing.JTabbedPane;
 import javax.swing.SwingConstants;
 import java.awt.GridBagLayout;
@@ -26,9 +25,18 @@ import java.awt.GridBagConstraints;
 import java.awt.Insets;
 import java.awt.Label;
 
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.DataLine;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.ImageIcon;
 import javax.swing.border.EtchedBorder;
 import java.awt.Font;
+import javax.swing.UIManager;
+
 
 public class GUI {
 
@@ -53,6 +61,7 @@ public class GUI {
 	public static final int CLOSED = 1;
 	public static final int STUCK = 2;
 	public static final int ODO = 3;
+	public static final int MOVING = 5;
 
 	/**
 	 * Create the application.
@@ -73,6 +82,9 @@ public class GUI {
 		}
 		
 		initialize();
+		
+		
+		
 	}
 
 	/**
@@ -91,6 +103,7 @@ public class GUI {
 		widthOfGUI += EXTRA_GUI_WIDTH;
 
 		frmElevators = new JFrame();
+		frmElevators.getContentPane().setBackground(UIManager.getColor("Button.background"));
 		frmElevators.setTitle("Elevators");
 		frmElevators.setIconImage(Toolkit.getDefaultToolkit().getImage("Assets\\favicon.png"));
 		frmElevators.setBounds(100, 100, widthOfGUI, EXTRA_SPACE + heightOfRows);
@@ -137,6 +150,7 @@ public class GUI {
 		displayPanel.setLayout(gbl_displayPanel);
 
 		JPanel floorTitlePanel = new JPanel();
+		floorTitlePanel.setBackground(UIManager.getColor("Button.background"));
 		floorTitlePanel.setBorder(new TitledBorder(new LineBorder(new Color(0, 0, 0)), "Floors", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		GridBagConstraints gbc_floorTitlePanel = new GridBagConstraints();
 		gbc_floorTitlePanel.fill = GridBagConstraints.VERTICAL;
@@ -249,6 +263,41 @@ public class GUI {
 			elevInfoPanels[i].add(elevInfos[i][3]);
 		}
 
+		File audioFile = new File("m.wav");
+		AudioInputStream audioStream = null;
+		try {
+			audioStream = AudioSystem.getAudioInputStream(audioFile);
+		} catch (UnsupportedAudioFileException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		AudioFormat format = audioStream.getFormat();
+		 
+		DataLine.Info info = new DataLine.Info(Clip.class, format);
+		
+		Clip audioClip = null;
+		try {
+			audioClip = (Clip) AudioSystem.getLine(info);
+		} catch (LineUnavailableException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		try {
+			audioClip.open(audioStream);
+		} catch (LineUnavailableException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		audioClip.start();
+		audioClip.loop(2);
 		frmElevators.setVisible(true);
 		frmElevators.setLocation(150, 100);
 	}
@@ -263,6 +312,9 @@ public class GUI {
 			}
 			else if(status == CLOSED) {
 				floors[elev][floor - 1].setIcon(new ImageIcon("Assets\\Closed.png"));
+			}
+			else if(status == MOVING) {
+				floors[elev][floor - 1].setIcon(new ImageIcon("Assets\\Moving.png"));
 			}
 		}
 	}
@@ -310,5 +362,9 @@ public class GUI {
 		setDirectionInfo(elev, "SHUTDOWN");
 		
 		setDoorsInfo(elev, 3);
+	}
+	
+	public static void main(String[] args) {
+		GUI g = new GUI();
 	}
 }
