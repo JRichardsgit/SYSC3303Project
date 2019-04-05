@@ -63,6 +63,7 @@ public class FloorParser extends Thread {
 		}
 		scan.close(); // close scanner
 
+		/*
 		// Print parsed instructions 
 		for (String[] request: requestList) {
 			for (int i = 0; i < NUM_INSTRUCTION_FIELDS; i++) {
@@ -70,6 +71,7 @@ public class FloorParser extends Thread {
 			}
 			System.out.println();
 		}
+		*/
 	}
 	
 	/**

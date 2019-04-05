@@ -99,8 +99,9 @@ public class FloorSubsystem extends Thread {
 	public String selectFile() {
 		JFileChooser fc = new JFileChooser();
 		fc.setCurrentDirectory(new File("Assets\\Request Files"));
-        int returnVal = fc.showDialog(null, "Select an input file");
-     
+		fc.revalidate();
+        int returnVal = fc.showDialog(fc, "Select File");
+        
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             return fc.getSelectedFile().getName();
         } 
@@ -111,7 +112,7 @@ public class FloorSubsystem extends Thread {
 
 		//Create the Text Area
 		floorSystemLog = new JTextArea();
-		floorSystemLog.setFont(new Font("Arial", Font.ROMAN_BASELINE, 20));
+		floorSystemLog.setFont(new Font("Arial", Font.ROMAN_BASELINE, 14));
 		floorSystemLog.setLineWrap(true);
 		floorSystemLog.setWrapStyleWord(true);
 		JScrollPane areaScrollPane = new JScrollPane(floorSystemLog);
@@ -138,8 +139,8 @@ public class FloorSubsystem extends Thread {
 		//Create and set up the content pane.
 		Container newContentPane = schedulerPanel;
 		frame.setContentPane(newContentPane);
-		frame.setPreferredSize(new Dimension(800, 500));
-		frame.setLocation(100, 550);
+		frame.setPreferredSize(new Dimension(500, 300));
+		frame.setLocation(100 + (425 * 3), 350);
 		//Display the window.
 		frame.pack();
 		frame.setVisible(true);

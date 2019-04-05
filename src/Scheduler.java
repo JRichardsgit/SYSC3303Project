@@ -99,7 +99,7 @@ public class Scheduler {
 		
 		//Create the Text Area
 		schedulerLog = new JTextArea();
-        schedulerLog.setFont(new Font("Arial", Font.ROMAN_BASELINE, 20));
+        schedulerLog.setFont(new Font("Arial", Font.ROMAN_BASELINE, 14));
         schedulerLog.setLineWrap(true);
         schedulerLog.setWrapStyleWord(true);
         JScrollPane areaScrollPane = new JScrollPane(schedulerLog);
@@ -126,8 +126,8 @@ public class Scheduler {
         //Create and set up the content pane.
         Container newContentPane = schedulerPanel;
         frame.setContentPane(newContentPane);
-        frame.setPreferredSize(new Dimension(800, 500));
-        frame.setLocation(100, 50);
+        frame.setPreferredSize(new Dimension(500, 300));
+        frame.setLocation(100 + (425 * 3), 50);
         //Display the window.
         frame.pack();
         frame.setVisible(true);

@@ -133,7 +133,7 @@ public class Elevator extends Thread {
 
 		// Create the Text Area
 		elevatorLog = new JTextArea();
-		elevatorLog.setFont(new Font("Arial", Font.ROMAN_BASELINE, 20));
+		elevatorLog.setFont(new Font("Arial", Font.ROMAN_BASELINE, 14));
 		elevatorLog.setLineWrap(true);
 		elevatorLog.setWrapStyleWord(true);
 		JScrollPane areaScrollPane = new JScrollPane(elevatorLog);
@@ -157,9 +157,8 @@ public class Elevator extends Thread {
 		Container newContentPane = schedulerPanel;
 
 		frame.setContentPane(newContentPane);
-		frame.setPreferredSize(new Dimension(800, 500));
-		frame.setLocation(900, 50 + (500 * elevatorNum));
-		// Display the window.
+		frame.setPreferredSize(new Dimension(500, 300));
+		frame.setLocation(100 + (425 * 3), 650);
 		frame.pack();
 		frame.setVisible(true);
 	}

@@ -71,8 +71,8 @@ public class GUI {
 			elevNum = Integer.parseInt(JOptionPane.showInputDialog("How many elevators?"));
 			floorNum = Integer.parseInt(JOptionPane.showInputDialog("How many floors?"));
 		}
+		
 		initialize();
-		frmElevators.setVisible(true);
 	}
 
 	/**
@@ -92,7 +92,7 @@ public class GUI {
 
 		frmElevators = new JFrame();
 		frmElevators.setTitle("Elevators");
-		frmElevators.setIconImage(Toolkit.getDefaultToolkit().getImage("Assets\\Webp.net-resizeimage.png"));
+		frmElevators.setIconImage(Toolkit.getDefaultToolkit().getImage("Assets\\favicon.png"));
 		frmElevators.setBounds(100, 100, widthOfGUI, EXTRA_SPACE + heightOfRows);
 		frmElevators.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		GridBagLayout gridBagLayout = new GridBagLayout();
@@ -236,19 +236,21 @@ public class GUI {
 			elevInfos[i][0].setFont(new Font("Tahoma", Font.PLAIN, 17));
 			elevInfoPanels[i].add(elevInfos[i][0]);
 
-			elevInfos[i][1] = new JLabel("Direction: N/A");
+			elevInfos[i][1] = new JLabel("Direction: IDLE");
 			elevInfos[i][1].setFont(new Font("Tahoma", Font.PLAIN, 17));
 			elevInfoPanels[i].add(elevInfos[i][1]);
 
-			elevInfos[i][2] = new JLabel("Requests: N/A");
+			elevInfos[i][2] = new JLabel("Requests: STANDING BY");
 			elevInfos[i][2].setFont(new Font("Tahoma", Font.PLAIN, 17));
 			elevInfoPanels[i].add(elevInfos[i][2]);
 
-			elevInfos[i][3] = new JLabel("Doors: Closed");
+			elevInfos[i][3] = new JLabel("Doors: CLOSED");
 			elevInfos[i][3].setFont(new Font("Tahoma", Font.PLAIN, 17));
 			elevInfoPanels[i].add(elevInfos[i][3]);
 		}
 
+		frmElevators.setVisible(true);
+		frmElevators.setLocation(150, 100);
 	}
 
 	public void setElevatorDoor(int elev, int floor, int status) {
@@ -266,7 +268,7 @@ public class GUI {
 	}
 	
 	public void setCurrentFloorInfo(int elev, int i) {
-		elevInfos[elev][0].setText("CurrentFloor: " + i);
+		elevInfos[elev][0].setText("Current Floor: " + i);
 	}
 	
 	public void setDirectionInfo(int elev, String s) {
@@ -275,7 +277,13 @@ public class GUI {
 
 	public void setRequestsInfo(int elev, ArrayList<Integer> arr) {
 		String temp = "Requests: ";
-		temp += arr.toString();
+		if (arr.isEmpty()) {
+			temp += "STANDING BY";
+		}
+			
+		else {
+			temp += arr.toString();
+		}
 		elevInfos[elev][2].setText(temp);
 	}
 
@@ -299,7 +307,7 @@ public class GUI {
 		for (int i = 0; i <floorNum; i++) {
 			floors[elev][i].setIcon(new ImageIcon("Assets\\Shutdown.png"));
 		}
-		setDirectionInfo(elev, "Shutdown");
+		setDirectionInfo(elev, "SHUTDOWN");
 		
 		setDoorsInfo(elev, 3);
 	}
