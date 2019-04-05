@@ -22,7 +22,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.text.DefaultCaret;
 
-public class FloorSubsystem {
+public class FloorSubsystem extends Thread {
 
 	//Sockets and Packets
 	DatagramPacket sendPacket, receivePacket;
@@ -30,10 +30,21 @@ public class FloorSubsystem {
 
 	//IP address
 	InetAddress address;
+	
+	private long floorButtons_start;
+	private long floorButtons_end;
+	private boolean measure_floorButtons = false;
+	
+	private File file;
+	private FileWriter fileWriter;
+	private BufferedWriter bufferedWriter;
+	private ArrayList<String> measurements;
 
 	//Data Structures for relaying data
 	private FloorData floorDat;
 	private SchedulerData scheDat;
+	
+	private FloorCommunicator communicator;
 
 	// GUI
 	private JTextArea floorSystemLog;
@@ -41,9 +52,7 @@ public class FloorSubsystem {
 	//List of floors
 	private Floor floors[];
 
-	private FloorParser fp;
-
-	ArrayList<String[]> commands;
+	private FloorParser parser;
 
 	/**
 	 * Create a new floor subsystem
@@ -65,17 +74,22 @@ public class FloorSubsystem {
 		for (int i = 0; i < numFloors; i ++) {
 			floors[i] = new Floor(i + 1, this);
 		}
-
+		
+		communicator = new FloorCommunicator(this);
+		communicator.start();
+		measurements = new ArrayList<String>();
+		
 		try {
 
-			//address = InetAddress.getByName("172.17.133.42");
-
+			//address = InetAddress.getByName("192.168.43.197");
 			address = InetAddress.getLocalHost();
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		fp = new FloorParser();
+		parser = new FloorParser(this, numFloors);
+		parser.start();
+		
 		createAndShowGUI();
 	}
 
@@ -117,89 +131,36 @@ public class FloorSubsystem {
 		frame.setVisible(true);
 	}
 
-	/**
-	 * Send packet to scheduler
-	 * @param floorDat the floor data to be sent
-	 */
-	public void send(FloorData floorDat) {
-		// Prepare a DatagramPacket and send it via sendReceiveSocket
-		// to port 4000 on the destination host.
-		this.floorDat = floorDat;
-
-		try {
-			// Convert the FloorData object into a byte array
-			ByteArrayOutputStream baoStream = new ByteArrayOutputStream();
-			ObjectOutputStream ooStream = new ObjectOutputStream(new BufferedOutputStream(baoStream));
-			ooStream.flush();
-			ooStream.writeObject(floorDat);
-			ooStream.flush();
-			byte msg[] = baoStream.toByteArray();
-
-			// Construct a datagram packet that is to be sent to a specified port
-			sendPacket = new DatagramPacket(msg, msg.length, address, 3000);
-
-			// Send the datagram packet to the server via the send/receive socket.
-			sendReceiveSocket.send(sendPacket);
-
-			print("FloorSubsystem: Request sent to scheduler.");
-			print("Containing:\n	" + floorDat.getStatus() + "\n");
-
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-			System.exit(1);
+	public void processPacket(SchedulerFloorData sfdata) {
+		int mode = sfdata.getMode();
+		switch(mode) {
+		case SchedulerFloorData.CONFIRM_MESSAGE:
+			if (measure_floorButtons) {
+				measure_floorButtons = false;
+				floorButtons_end = System.currentTimeMillis();
+			}
+			addMeasurement("Floor Buttons: " + (floorButtons_end - floorButtons_start));
+			break;
+		case SchedulerFloorData.UPDATE_MESSAGE:
+			break;
 		}
-
 	}
-
-
-	/**
-	 * Receive a packet from the scheduler
-	 */
-	public void receive() {
-
-		// Construct a DatagramPacket for receiving packets up
-		// to 5000 bytes long (the length of the byte array).
-
-		byte data[] = new byte[5000];
-		receivePacket = new DatagramPacket(data, data.length);
-
-		// Block until a datagram packet is received from receiveSocket.
-		try {
-			System.out.println("Waiting..."); // so we know we're waiting
-			sendReceiveSocket.receive(receivePacket);
-		} catch (IOException e) {
-			System.out.print("IO Exception: likely:");
-			System.out.println("Receive Socket Timed Out.\n" + e);
-			e.printStackTrace();
-			System.exit(1);
-		}
-
-		try {
-			// Retrieve the SchedulerData object from the receive packet
-			ByteArrayInputStream byteStream = new ByteArrayInputStream(data);
-			ObjectInputStream is;
-			is = new ObjectInputStream(new BufferedInputStream(byteStream));
-			Object o = is.readObject();
-			is.close();
-
-			scheDat = (SchedulerData) o;
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		print("FloorSubsystem: Packet received:");
+	
+	public void addMeasurement(String measurement) {
+		measurements.add(measurement);
 	}
-
-	/**
-	 * Close the data socket
-	 */
-	public void closeSocket() {
-		sendReceiveSocket.close();
+	
+	public void saveToFile() throws IOException {
+		File file = new File("Assets\\floor_buttons.txt");
+		if (file.exists()) {
+			file.createNewFile();
+		}
+		FileWriter fileWriter = new FileWriter(file, true);
+		BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+		for (String measurement: measurements) {
+			bufferedWriter.write(measurement + " ms\n");
+		}
+		bufferedWriter.close();
 	}
 
 	/**
@@ -225,11 +186,12 @@ public class FloorSubsystem {
 	 */
 	public void goUp(int currFloor, int destFloor) {
 		Floor floor = getFloor(currFloor);
-
 		floor.pressUp();
 		floor.setDestination(destFloor);
-
-		send(floor.getFloorData());
+		
+		measure_floorButtons = true;
+		floorButtons_start = System.currentTimeMillis();
+		communicator.send(floor.getFloorData());
 	}
 
 	/**
@@ -238,11 +200,12 @@ public class FloorSubsystem {
 	 */
 	public void goDown(int currFloor, int destFloor) {
 		Floor floor = getFloor(currFloor);
-
 		floor.pressDown();
 		floor.setDestination(destFloor);
 
-		send(floor.getFloorData());
+		measure_floorButtons = true;
+		floorButtons_start = System.currentTimeMillis();
+		communicator.send(floor.getFloorData());
 	}
 
 	/**
@@ -288,43 +251,9 @@ public class FloorSubsystem {
 
 		//Create a floor subsystem with 5 floors
 		FloorSubsystem c = new FloorSubsystem(5);
-
-		/**
-		 * FLOOR SIMULATION
-		 * 
-		 * Floor simulation data now read in by input file.
-		 */
-
-		FloorParser parser = new FloorParser();
-		try {
-			parser.Parse("floordata");
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		
+		while(true) {
+			c.wait(100);
 		}
-		parser.dispatch();
-
-		int count = 0;
-		while( count < parser.requests) {
-			for(int i = 0; i<parser.floors;i++) {
-				if(parser.upQ[i].peek() != null) {
-					if (parser.upQ[i].peek().equals(parser.getSysTime())) {
-						parser.upQ[i].remove();
-						c.goUp(Integer.parseInt(parser.upQ[i].poll()), Integer.parseInt(parser.upQ[i].poll()));
-						count++;
-					}
-				}
-				if(parser.downQ[i].peek() != null) {
-					if (parser.downQ[i].peek().equals(parser.getSysTime())) {
-						parser.downQ[i].remove();
-						c.goDown(Integer.parseInt(parser.downQ[i].remove()), Integer.parseInt(parser.downQ[i].remove()));
-						count++;
-					}
-				}
-			}
-			c.wait(1000);
-		}
-
-		c.closeSocket();
 	}
 }

@@ -18,8 +18,9 @@ public class Scheduler {
 	DatagramSocket sendSocket, receiveSocket;
 	
 	//IP Address
-	InetAddress address;
-
+	InetAddress elevatorAddress;
+	InetAddress floorAddress;
+	private int floorPort;
 	//Queue for received packets
 	ArrayList<DatagramPacket> receiveQueue;
 
@@ -70,8 +71,9 @@ public class Scheduler {
 		}
 		
 		try {
-			//address = InetAddress.getByName("172.17.133.42");
-			address = InetAddress.getLocalHost();
+			//address = InetAddress.getByName("192.168.43.69");
+			elevatorAddress = InetAddress.getLocalHost();
+			floorAddress = InetAddress.getLocalHost();
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -146,9 +148,7 @@ public class Scheduler {
 	 * @param scheDat
 	 *            the scheduler data
 	 */
-	public void floorSend(SchedulerData scheDat) {
-
-		this.scheDat = scheDat;
+	public void floorSend(SchedulerFloorData data) {
 
 		try {
 			// Convert the FloorData object into a byte array
@@ -156,12 +156,12 @@ public class Scheduler {
 			ObjectOutputStream ooStream;
 			ooStream = new ObjectOutputStream(new BufferedOutputStream(baoStream));
 			ooStream.flush();
-			ooStream.writeObject(scheDat);
+			ooStream.writeObject(data);
 			ooStream.flush();
 			byte msg[] = baoStream.toByteArray();
 
-			floorSendPacket = new DatagramPacket(msg, msg.length, receivePacket.getAddress(),
-					receivePacket.getPort());
+			floorSendPacket = new DatagramPacket(msg, msg.length, floorAddress,
+					floorPort);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -199,7 +199,7 @@ public class Scheduler {
 			ooStream.flush();
 			byte msg[] = baoStream.toByteArray();
 
-			elevatorSendPacket = new DatagramPacket(msg, msg.length, address, targetPort);
+			elevatorSendPacket = new DatagramPacket(msg, msg.length, elevatorAddress, targetPort);
 
 
 		} catch (IOException e1) {
@@ -223,7 +223,7 @@ public class Scheduler {
 	public void receive() {
 		byte data[] = new byte[5000];
 		receivePacket = new DatagramPacket(data, data.length);
-		print("Scheduler: Waiting for Packet.\n");
+		//print("Scheduler: Waiting for Packet.\n");
 
 		// Block until a datagram packet is received from receiveSocket.
 		try {
@@ -255,14 +255,20 @@ public class Scheduler {
 						floorDat = (FloorData) o;
 						print("Scheduler: Packet received.");
 						print("Containing:\n	" + floorDat.getStatus() + "\n");
-
+						
+						floorAddress = receivePacket.getAddress();
+						floorPort = receivePacket.getPort();
+						
 						updateRequests();
 						routeElevator();
+						
+						floorSend(new SchedulerFloorData(SchedulerFloorData.CONFIRM_MESSAGE));
 					} else {
 						elevDat = (ElevatorData) o;
-						print("Scheduler: Packet received.");
-						print("Containing:\n	" + elevDat.getStatus() + "\n");
-
+						//print("Scheduler: Packet received.");
+						//print("Containing:\n	" + elevDat.getStatus() + "\n");
+						
+						elevatorAddress = receivePacket.getAddress();
 						elevatorList[elevDat.getElevatorNumber()] = elevDat;
 						displayElevatorStates();
 						manageElevators();
@@ -470,17 +476,21 @@ public class Scheduler {
 
 	public int closestElevator() {
 		//Assume closest is elevator 0
-		ElevatorData closest = potentialRoutes.get(0);
-
-		for (ElevatorData e: potentialRoutes) {
-			//If elevator is closer that the current closest, it becomes the new closest
-			if (Math.abs((e.getCurrentFloor() - floorDat.getFloorNum())) < Math
-					.abs((closest.getCurrentFloor() - floorDat.getFloorNum()))) {
-				closest = e;
-			} 
+		if (!potentialRoutes.isEmpty()) {
+			ElevatorData closest = potentialRoutes.get(0);
+	
+			for (ElevatorData e: potentialRoutes) {
+				//If elevator is closer that the current closest, it becomes the new closest
+				if (Math.abs((e.getCurrentFloor() - floorDat.getFloorNum())) < Math
+						.abs((closest.getCurrentFloor() - floorDat.getFloorNum()))) {
+					closest = e;
+				} 
+			}
+	
+			return closest.getElevatorNumber();
 		}
-
-		return closest.getElevatorNumber();
+		
+		return -1;
 
 	}
 
@@ -527,7 +537,7 @@ public class Scheduler {
 	public void determineIdle() {
 		ArrayList<ElevatorData> remove = new ArrayList<ElevatorData>();
 		for (ElevatorData ed: potentialRoutes) {
-			if(!ed.isIdle()) {// if not idle remove from potential routes
+			if(!ed.isIdle() || (!ed.getRequestedFloors().isEmpty())) {// if not idle remove from potential routes
 				remove.add(ed);
 			}
 		}

@@ -9,6 +9,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 
 public class ElevatorCommunicator extends Thread {
 	// Socket and Packet
@@ -42,14 +43,6 @@ public class ElevatorCommunicator extends Thread {
 	}
 
 	/**
-	 * Set the scheduler address for sending packets
-	 * @param address
-	 */
-	public void setSchedulerAddress(InetAddress address) {
-		schedulerAddress = address;
-	}
-
-	/**
 	 * Send a packet to the scheduler
 	 */
 	public void send() {
@@ -65,7 +58,8 @@ public class ElevatorCommunicator extends Thread {
 			ooStream.flush();
 
 			byte msg[] = baoStream.toByteArray();
-			sendPacket = new DatagramPacket(msg, msg.length, InetAddress.getLocalHost(), 3000);
+			
+			sendPacket = new DatagramPacket(msg, msg.length, schedulerAddress, 3000);
 
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
@@ -79,7 +73,7 @@ public class ElevatorCommunicator extends Thread {
 			e.printStackTrace();
 			System.exit(1);
 		}
-
+		elevator.print("Sending to address: " + schedulerAddress);
 		elevator.print("Sent packet to scheduler.\n Containing:\n	" + elevDat.getStatus() + "\n");
 	}
 
@@ -96,7 +90,7 @@ public class ElevatorCommunicator extends Thread {
 			receivePacket = new DatagramPacket(data, data.length);
 			// Block until a datagram packet is received from receiveSocket.
 			try {
-				elevator.print("Waiting for packet...");
+				//elevator.print("Waiting for packet...");
 				receiveSocket.receive(receivePacket);
 				schedulerAddress = receivePacket.getAddress();
 
@@ -123,7 +117,8 @@ public class ElevatorCommunicator extends Thread {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-
+			
+			elevator.print("Received packet from address: " + schedulerAddress);
 			elevator.processPacket(scheDat);
 		}	
 		
@@ -157,7 +152,7 @@ public class ElevatorCommunicator extends Thread {
 	public void run() {
 		while (true) {
 			receive();
-			wait(2000);
+			wait(100);
 		}
 	}
 
