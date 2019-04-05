@@ -12,12 +12,12 @@ import org.junit.jupiter.api.Test;
  * the elevatorSubsystem to the scheduler
  *
  */
-public class ElevatorTest {
+public class TestCases {
 
 	private Scheduler scheduler;
 	private FloorSubsystem floorSubsystem;
 	private ElevatorSubsystem elevatorSubsystem;
-
+	/*
 	@BeforeEach
 	void setUp() throws Exception {
 		// Set up system with 5 floors and 2 elevators
@@ -58,4 +58,5 @@ public class ElevatorTest {
 		// floor 2
 		assertEquals(new Integer(elevatorSubsystem.getElevatorData().getCurrentFloor()), new Integer(2));
 	}
+	*/
 }
