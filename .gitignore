@@ -20,3 +20,6 @@
 /ErrorEvent.class
 /ElevatorReceiver.class
 /ElevatorCommunicator.class
+/ElevatorInterface.class
+/SchedulerFloorData.class
+/FloorCommunicator.class
