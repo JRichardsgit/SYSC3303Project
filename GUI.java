@@ -310,4 +310,13 @@ public class GUI {
 			elevInfos[elev][3].setText("Doors: Shutdown");
 		}
 	}
+	
+	public void setShutdown(int elev) {
+		//shutdown all floors
+		for (int i = 0; i <floorNum; i++) {
+			floors[elev][i].setIcon(new ImageIcon("Assets\\Shutdown.png"));
+		}
+		setDirectionInfo(elev, "Shutdown");
+		setDoorsInfo(elev, 3);
+	}
 }
