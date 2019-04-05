@@ -193,8 +193,7 @@ public class Elevator extends Thread {
 		if (measure_arrivalSensors) {
 			arrivalSensors_end = System.currentTimeMillis();
 			measure_arrivalSensors = false;
-			addArrivalSensorMeasurement("Arrival Sensors: " + (arrivalSensors_end - arrivalSensors_start));
-
+			addArrivalSensorMeasurement("" + (arrivalSensors_end - arrivalSensors_start));
 		}
 
 		switch (mode) {
@@ -237,7 +236,7 @@ public class Elevator extends Thread {
 			if (measure_elevatorButtons) {
 				measure_elevatorButtons = false;
 				elevatorButtons_end = System.currentTimeMillis();
-				addElevatorButtonMeasurement("Elevator Buttons: " + (elevatorButtons_end - elevatorButtons_start));
+				addElevatorButtonMeasurement("" + (elevatorButtons_end - elevatorButtons_start));
 
 			}
 			actionReady = true;
@@ -268,6 +267,11 @@ public class Elevator extends Thread {
 				measure_elevatorButtons = true;
 				elevatorButtons_start = System.currentTimeMillis();
 				
+			}
+			if (reqFloors.isEmpty()) {
+				elevatorGUI.setDirectionInfo(elevatorNum, "IDLE");
+			} else {
+				elevatorGUI.setDirectionInfo(elevatorNum, "STOPPED");
 			}
 			elevatorGUI.setRequestsInfo(elevatorNum, reqFloors);
 			break;
@@ -486,7 +490,7 @@ public class Elevator extends Thread {
 	}
 
 	public void saveToArrivalSensorsFile() throws IOException {
-		File file = new File("Assets\\arrival_sensors.txt");
+		File file = new File("Assets\\Measurements\\arrival_sensors.txt");
 		if (!file.exists()) {
 			file.createNewFile();
 		}
@@ -499,7 +503,7 @@ public class Elevator extends Thread {
 	}
 
 	public void saveToElevatorButtonsFile() throws IOException {
-		File file = new File("Assets\\elevator_buttons.txt");
+		File file = new File("Assets\\Measurements\\elevator_buttons.txt");
 		if (!file.exists()) {
 			file.createNewFile();
 		}

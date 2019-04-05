@@ -16,6 +16,7 @@ import java.util.Calendar;
 import java.util.Date;
 
 import javax.swing.BorderFactory;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -87,10 +88,23 @@ public class FloorSubsystem extends Thread {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		parser = new FloorParser(this, numFloors);
+		
+		
+		parser = new FloorParser(this, numFloors, selectFile());
 		parser.start();
 		
 		createAndShowGUI();
+	}
+	
+	public String selectFile() {
+		JFileChooser fc = new JFileChooser();
+		fc.setCurrentDirectory(new File("Assets\\Request Files"));
+        int returnVal = fc.showDialog(null, "Select an input file");
+     
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            return fc.getSelectedFile().getName();
+        } 
+        return "default_requests.txt";
 	}
 
 	public void createAndShowGUI() {
@@ -138,8 +152,8 @@ public class FloorSubsystem extends Thread {
 			if (measure_floorButtons) {
 				measure_floorButtons = false;
 				floorButtons_end = System.currentTimeMillis();
+				addMeasurement("" + (floorButtons_end - floorButtons_start));
 			}
-			addMeasurement("Floor Buttons: " + (floorButtons_end - floorButtons_start));
 			break;
 		case SchedulerFloorData.UPDATE_MESSAGE:
 			break;
@@ -151,7 +165,7 @@ public class FloorSubsystem extends Thread {
 	}
 	
 	public void saveToFile() throws IOException {
-		File file = new File("Assets\\floor_buttons.txt");
+		File file = new File("Assets\\Measurements\\floor_buttons.txt");
 		if (file.exists()) {
 			file.createNewFile();
 		}
@@ -250,7 +264,7 @@ public class FloorSubsystem extends Thread {
 	public static void main(String args[]) { 
 
 		//Create a floor subsystem with 5 floors
-		FloorSubsystem c = new FloorSubsystem(5);
+		FloorSubsystem c = new FloorSubsystem(22);
 		
 		while(true) {
 			c.wait(100);

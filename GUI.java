@@ -281,16 +281,16 @@ public class GUI {
 
 	public void setDoorsInfo(int elev, int status) {
 		if(status == OPEN) {
-			elevInfos[elev][3].setText("Doors: Open");
+			elevInfos[elev][3].setText("Doors: OPEN");
 		}
 		else if(status == STUCK) {
-			elevInfos[elev][3].setText("Doors: Stuck");
+			elevInfos[elev][3].setText("Doors: STUCK");
 		}
 		else if(status == CLOSED) {
-			elevInfos[elev][3].setText("Doors: Closed");
+			elevInfos[elev][3].setText("Doors: CLOSED");
 		}
 		else if(status == ODO) {
-			elevInfos[elev][3].setText("Doors: Shutdown");
+			elevInfos[elev][3].setText("Doors: SHUTDOWN");
 		}
 	}
 	

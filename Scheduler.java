@@ -705,7 +705,7 @@ public class Scheduler {
 
 	public static void main(String args[]) {
 		//Initialize a scheduler for a system with 5 floors and 2 elevators
-		Scheduler c = new Scheduler(5, 2);
+		Scheduler c = new Scheduler(22, 4);
 		c.createAndShowGUI();
 		/**
 		 * Scheduler Logic
