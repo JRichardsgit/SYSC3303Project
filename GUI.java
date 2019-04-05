@@ -194,15 +194,15 @@ public class GUI {
 
 			//create the floors for the elevator
 			for (int j = 0; j < floorNum; j++) {
-				floors[i-1][j] = new JLabel("");
-				floors[i-1][j].setIcon(new ImageIcon("Assets\\Closed.png"));
-				floors[i-1][j].setHorizontalAlignment(SwingConstants.CENTER);
+				floors[i-1][floorNum - 1 - j] = new JLabel("");
+				floors[i-1][floorNum - 1 - j].setIcon(new ImageIcon("Assets\\Closed.png"));
+				floors[i-1][floorNum - 1 - j].setHorizontalAlignment(SwingConstants.CENTER);
 				GridBagConstraints gbc_floor = new GridBagConstraints();
 				gbc_floor.fill = GridBagConstraints.BOTH;
 				gbc_floor.insets = new Insets(0, 0, 5, 0);
 				gbc_floor.gridx = 0;
 				gbc_floor.gridy = j;
-				displays[i - 1].add(floors[i-1][j], gbc_floor);
+				displays[i - 1].add(floors[i-1][floorNum - 1 - j], gbc_floor);
 			}
 
 		}
