@@ -281,7 +281,7 @@ public class Elevator extends Thread {
 		}
 
 		// Update the scheduler with current status if it changed
-		if (mode != SchedulerData.CONTINUE_REQUEST && mode != SchedulerData.DOOR_REQUEST) {
+		if (mode != SchedulerData.CONTINUE_REQUEST || mode != SchedulerData.DOOR_REQUEST) {
 			replyRequired = false;
 			communicator.send();
 			actionReady = true;
@@ -591,7 +591,7 @@ public class Elevator extends Thread {
 				}
 			}
 			// Slow down a bit
-			wait(100);
+			wait(500);
 
 		}
 	}

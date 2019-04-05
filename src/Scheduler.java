@@ -215,6 +215,7 @@ public class Scheduler {
 		}
 
 		print("Scheduler: Sent packet to Elevator " + scheDat.getElevatorNumber() + ".");
+		wait(100);
 	}
 
 	/**
@@ -260,8 +261,6 @@ public class Scheduler {
 						floorPort = receivePacket.getPort();
 						
 						updateRequests();
-						routeElevator();
-						
 						floorSend(new SchedulerFloorData(SchedulerFloorData.CONFIRM_MESSAGE));
 					} else {
 						elevDat = (ElevatorData) o;
@@ -273,6 +272,9 @@ public class Scheduler {
 						displayElevatorStates();
 						manageElevators();
 					}
+					
+					if (!pendRequests.isEmpty())
+						routeElevator();
 				}
 			}
 
@@ -714,7 +716,7 @@ public class Scheduler {
 			c.receive();
 			c.processAndSend();
 			//Slow down
-			c.wait(1000);
+			c.wait(500);
 		}
 
 	}
