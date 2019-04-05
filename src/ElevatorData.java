@@ -10,12 +10,18 @@ public class ElevatorData implements Serializable {
 	public final static int NO_ERROR = 0;
 	public final static int DOOR_STUCK_ERROR = 1;
 	public final static int ELEVATOR_STUCK_ERROR = 2;
+	
+	//CONSTANTS FOR CURRENT DIRECTION
+	public final int UP = 0;
+	public final int DOWN = 1;
+	public final int IDLE = 2;
 
 	private final int elevatorNum; //the elevator number
 	private final int currFloor; //the elevator's current floor
 	private ArrayList<Integer> reqFloor; //the requested floors
 	private boolean movingUp; //true if elevator is moving up, false otherwise
 	private boolean movingDown; //true if elevator is moving down, false otherwise
+	private int currDirection;
 	private boolean doorOpened; //door flag (open/closed)
 	private boolean shutdown; // shutdown flag
 	private int errorType; // the error type
@@ -33,7 +39,7 @@ public class ElevatorData implements Serializable {
 	 * @param doorOpened
 	 */
 	public ElevatorData(int elevatorNum, int errorType, int currFloor, 
-			ArrayList<Integer> reqFloor, boolean movingUp, boolean movingDown, 
+			ArrayList<Integer> reqFloor, boolean movingUp, boolean movingDown, int currDirection, 
 			boolean doorOpened, boolean shutdown, boolean replyRequired) {
 		
 		this.elevatorNum = elevatorNum;
@@ -42,6 +48,7 @@ public class ElevatorData implements Serializable {
 		this.reqFloor = reqFloor;
 		this.movingUp = movingUp;
 		this.movingDown = movingDown;
+		this.currDirection = currDirection;
 		this.doorOpened = doorOpened;
 		this.shutdown = shutdown;
 		this.replyRequired = replyRequired;
@@ -104,8 +111,8 @@ public class ElevatorData implements Serializable {
 	 * @return true if the elevatorSubsystem is moving up, false otherwise
 	 */
 	public boolean isMovingUp() {
-		if (movingUp)
-			return movingUp;
+		if (currDirection == UP)
+			return true;
 		return false;
 	}
 
@@ -114,7 +121,7 @@ public class ElevatorData implements Serializable {
 	 * @return true if the elevator is moving up, false otherwise
 	 */
 	public boolean isMovingDown() {
-		if (!movingUp)
+		if (currDirection == DOWN)
 			return true;
 		return false;
 	}
@@ -124,7 +131,7 @@ public class ElevatorData implements Serializable {
 	 * @return true if elevator is idle, false otherwise
 	 */
 	public boolean isIdle() {
-		if (!movingUp && !movingDown)
+		if (currDirection == IDLE)
 			return true;
 		return false;
 	}

@@ -103,7 +103,7 @@ public class FloorParser extends Thread {
 		}
 		
 		for (String[] request: requestList) { 
-			int sourceFloor = Integer.parseInt(request[SOURCE_FLOOR]);
+			int sourceFloor = Integer.parseInt(request[SOURCE_FLOOR]) - 1;
 			if (request[DIRECTION].equals("up")) {
 				upQueue[sourceFloor].add(request);
 			} else {

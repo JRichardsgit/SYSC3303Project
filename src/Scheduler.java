@@ -90,7 +90,7 @@ public class Scheduler {
 		for (int i = 0; i < numElevators; i++) {
 			// Assume same starting position as set in elevator subsystem
 			elevatorList[i] = new ElevatorData(i, ElevatorData.NO_ERROR, 
-					1, new ArrayList<Integer>(), false, false, false, false, true);
+					1, new ArrayList<Integer>(), false, false, 2, false, false, true);
 		}
 
 	}
@@ -539,7 +539,7 @@ public class Scheduler {
 	public void determineIdle() {
 		ArrayList<ElevatorData> remove = new ArrayList<ElevatorData>();
 		for (ElevatorData ed: potentialRoutes) {
-			if(!ed.isIdle() || (!ed.getRequestedFloors().isEmpty())) {// if not idle remove from potential routes
+			if(!ed.isIdle()) {// if not idle remove from potential routes
 				remove.add(ed);
 			}
 		}
@@ -587,7 +587,8 @@ public class Scheduler {
 			int floor = fd.getFloorNum();
 			if (elevatorSameFloor(floor) && isAnyIdle()) {
 				determineIdle();
-				routedElevator = potentialRoutes.get(0).getElevatorNumber(); //Return first elevator
+				if (!potentialRoutes.isEmpty())
+					routedElevator = potentialRoutes.get(0).getElevatorNumber(); //Return first elevator
 				print("ROUTING CASE 0 - potential routes " + potentialRoutes.size());
 			}
 			//If all are above 
@@ -602,7 +603,7 @@ public class Scheduler {
 					routedElevator = potentialRoutes.get(0).getElevatorNumber(); //Return first elevator
 					print("ROUTING CASE 2 - potential routes " + potentialRoutes.size());
 				}
-
+				
 			}
 
 			//If all are below
@@ -618,6 +619,7 @@ public class Scheduler {
 					routedElevator = potentialRoutes.get(0).getElevatorNumber(); //Return first elevator
 					print("ROUTING CASE 4 - potential routes " + potentialRoutes.size());
 				}
+				
 			}
 			//Else, just send the closest one out of all the elevators
 			else {
@@ -640,15 +642,12 @@ public class Scheduler {
 					print("ROUTING CASE 6 - potential routes " + potentialRoutes.size());
 				}
 				
-				if (!potentialRoutes.isEmpty()) {
-					routedElevator = closestElevator();
-				} else {
+				if(!potentialRoutes.isEmpty()) {
 					potentialRoutes.clear();
 					for (ElevatorData e: elevatorList) {
 						if (e.isOperational())
 							potentialRoutes.add(e);
 					}
-
 					if(isAnyIdle()) {
 						//Filter elevators that are idle
 						determineIdle();

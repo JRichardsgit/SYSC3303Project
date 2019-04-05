@@ -22,8 +22,8 @@ import javax.swing.text.DefaultCaret;
  * Elevator Node Implementation
  */
 public class Elevator extends Thread {
-
-	//GUI reference
+	
+    //GUI reference
 	GUI elevatorGUI;
 	// Scheduler Packet Data
 	private SchedulerData scheDat;
@@ -37,6 +37,12 @@ public class Elevator extends Thread {
 	// Motor flags
 	private boolean movingUp;
 	private boolean movingDown;
+	private int currDirection;
+	
+	//CONSTANTS FOR CURRENT DIRECTION
+	public final int UP = 0;
+	public final int DOWN = 1;
+	public final int IDLE = 2;
 
 	// Door flag
 	private boolean doorOpen;
@@ -72,6 +78,7 @@ public class Elevator extends Thread {
 
 	// Floor Information
 	private ArrayList<Integer> reqFloors;
+	private ArrayList<Integer> subReqFloors;
 	private ArrayList<Integer> destFloors[];
 	private int currFloor;
 
@@ -104,11 +111,13 @@ public class Elevator extends Thread {
 		this.eSystem = eSystem;
 		movingUp = false;
 		movingDown = false;
+		currDirection = IDLE;
 		doorOpen = false;
 		currFloor = 1;
 		shutdown = false;
 		doorStuck = false;
 		reqFloors = new ArrayList<Integer>();
+		subReqFloors = new ArrayList<Integer>();
 		destFloors = new ArrayList[numFloors];
 		errorList = new ArrayList<ErrorEvent>();
 		initializedTime = System.nanoTime();
@@ -208,10 +217,56 @@ public class Elevator extends Thread {
 
 			// Add the requested floor to the list
 			if (!reqFloors.contains(floor)) {
-				reqFloors.add(floor);
-				Collections.sort(reqFloors);
-				if (movingDown)
-					Collections.reverse(reqFloors);
+				switch(currDirection) {
+				case UP: 
+					if (currFloor > floor) {
+						subReqFloors.add(floor);
+					} else if (currFloor < floor) {
+						reqFloors.add(floor);
+						Collections.sort(reqFloors);
+						Collections.sort(subReqFloors);
+					} 
+					break;
+				case DOWN:
+					if (currFloor < floor) {
+						subReqFloors.add(floor);
+					} else if (currFloor < floor) {
+						reqFloors.add(floor);
+						Collections.sort(reqFloors);
+						Collections.reverse(reqFloors);
+						Collections.sort(subReqFloors);
+						Collections.reverse(subReqFloors);
+					} 
+					break;
+				case IDLE:
+					reqFloors.add(floor);
+					break;
+				}
+				
+				if (!subReqFloors.isEmpty()) {
+					switch(currDirection) {
+					case UP:
+						if (currFloor < subReqFloors.get(0)) {
+							reqFloors.addAll(subReqFloors);
+							Collections.sort(reqFloors);
+							subReqFloors.clear();
+						}
+						break;
+					case DOWN:
+						if (currFloor > subReqFloors.get(0)) {
+							reqFloors.addAll(subReqFloors);
+							Collections.sort(reqFloors);
+							Collections.reverse(subReqFloors);
+							subReqFloors.clear();
+						}
+						break;
+					case IDLE:
+						reqFloors.addAll(subReqFloors);
+						subReqFloors.clear();
+						break;
+					}
+				}
+
 			}
 
 			// Update the destination floors for the requested floor
@@ -219,7 +274,11 @@ public class Elevator extends Thread {
 			destFloors[floor - 1].add(s.getDestFloor());
 
 			print("Current requests: " + reqFloors.toString());
-			elevatorGUI.setRequestsInfo(elevatorNum, reqFloors);
+			ArrayList<Integer> allRequests = new ArrayList<Integer>();
+			allRequests.addAll(reqFloors);
+			allRequests.addAll(subReqFloors);
+			
+			elevatorGUI.setRequestsInfo(elevatorNum, allRequests);
 			break;
 
 		case SchedulerData.MOVE_REQUEST:
@@ -253,24 +312,49 @@ public class Elevator extends Thread {
 				// Remove the floor that we arrived at from the requested floors
 				if (reqFloors.contains(currFloor))
 					reqFloors.remove(new Integer(currFloor));
+				
+				if (reqFloors.isEmpty()) {
+					currDirection = IDLE;
+					elevatorGUI.setDirectionInfo(elevatorNum, "IDLE");
+				} else {
+					if (currDirection == UP) {
+						elevatorGUI.setDirectionInfo(elevatorNum, "UP");
+					} else {
+						elevatorGUI.setDirectionInfo(elevatorNum, "DOWN");
+					}
+				}
 
 				// Add all the floor destinations from people who just boarded to the requested
 				// floors
-				reqFloors.removeAll(destFloors[currFloor - 1]);
-				reqFloors.addAll(destFloors[currFloor - 1]);
-				Collections.sort(reqFloors);
-				if (movingDown)
-					Collections.reverse(reqFloors);
+				switch(currDirection) {
+				case UP:
+					if (currFloor < destFloors[currFloor -1].get(0)) {
+						reqFloors.removeAll(destFloors[currFloor - 1]);
+						reqFloors.addAll(destFloors[currFloor - 1]);
+						Collections.sort(reqFloors);
+						destFloors[currFloor - 1].clear();
+					}
+					break;
+				case DOWN:
+					if (currFloor > destFloors[currFloor - 1].get(0)) {
+						reqFloors.removeAll(destFloors[currFloor - 1]);
+						reqFloors.addAll(destFloors[currFloor - 1]);
+						Collections.sort(reqFloors);
+						Collections.reverse(reqFloors);
+						destFloors[currFloor - 1].clear();
+					}
+					break;
+				case IDLE:
+					reqFloors.addAll(destFloors[currFloor - 1]);
+					Collections.sort(reqFloors);
+					destFloors[currFloor - 1].clear();
+					break;
+				}
 				// Clear the destination floors from that floor
-				destFloors[currFloor - 1].clear();
+				
 				measure_elevatorButtons = true;
 				elevatorButtons_start = System.currentTimeMillis();
 				
-			}
-			if (reqFloors.isEmpty()) {
-				elevatorGUI.setDirectionInfo(elevatorNum, "IDLE");
-			} else {
-				elevatorGUI.setDirectionInfo(elevatorNum, "STOPPED");
 			}
 			elevatorGUI.setRequestsInfo(elevatorNum, reqFloors);
 			break;
@@ -281,7 +365,13 @@ public class Elevator extends Thread {
 		}
 
 		// Update the scheduler with current status if it changed
-		if (mode != SchedulerData.CONTINUE_REQUEST || mode != SchedulerData.DOOR_REQUEST) {
+		if (mode == SchedulerData.STOP_REQUEST) {
+			replyRequired = true;
+			communicator.send();
+			actionReady = true;
+			waitForInstruction();
+		}
+		else if (mode != SchedulerData.CONTINUE_REQUEST || mode != SchedulerData.DOOR_REQUEST) {
 			replyRequired = false;
 			communicator.send();
 			actionReady = true;
@@ -329,23 +419,31 @@ public class Elevator extends Thread {
 
 			// If it is working
 			if (!shutdown) {
-				if (movingUp) {
-					currFloor++;
+				switch(currDirection) {
+				case UP:
+					if (currFloor != reqFloors.get(0)) {
+						currFloor++;
+					}
 					if (currFloor > numFloors) {
 						currFloor = numFloors;
 					}
 					print("Currently on floor " + currFloor + ", moving up.");
 					elevatorGUI.setDirectionInfo(elevatorNum, "UP");
-					
-				} else if (movingDown) {
-					currFloor--;
+					break;
+				case DOWN:
+					if (currFloor != reqFloors.get(0)) {
+						currFloor--;
+					}
 					if (currFloor <= 0) {
 						currFloor = 1;
 					}
 					print("Currently on floor " + currFloor + ", moving down.");
 					elevatorGUI.setDirectionInfo(elevatorNum, "DOWN");
+					break;
+				case IDLE:
+					elevatorGUI.setDirectionInfo(elevatorNum, "IDLE");
+					break;
 				}
-				
 				elevatorGUI.setCurrentFloorInfo(elevatorNum, currFloor);
 				wait(1000);
 			}
@@ -359,6 +457,7 @@ public class Elevator extends Thread {
 		print("Now moving up.");
 		movingUp = true;
 		movingDown = false;
+		currDirection = UP;
 	}
 
 	/**
@@ -368,6 +467,7 @@ public class Elevator extends Thread {
 		print("Now moving down.");
 		movingUp = false;
 		movingDown = true;
+		currDirection = DOWN;
 	}
 
 	/**
@@ -383,7 +483,9 @@ public class Elevator extends Thread {
 	 * Returns true if the motor idle
 	 */
 	public boolean isIdle() {
-		return (!movingUp && !movingDown);
+		if (currDirection == IDLE)
+			return true;
+		return false;
 	}
 
 	/**
@@ -476,7 +578,7 @@ public class Elevator extends Thread {
 			errType = ElevatorData.NO_ERROR;
 		}
 
-		return new ElevatorData(elevatorNum, errType, currFloor, reqFloors, movingUp, movingDown, doorOpen, shutdown,
+		return new ElevatorData(elevatorNum, errType, currFloor, reqFloors, movingUp, movingDown, currDirection, doorOpen, shutdown,
 				replyRequired);
 	}
 
