@@ -1,0 +1,12 @@
+Iteration 5 group responsibilities
+
+
+Gabriel - Made group role file, worked on discussion reports.
+
+Akash - measurement results
+
+Jolar - Test Cases, Coding,  Analysis of your system for schedulability
+
+Ryan - UML Diagram, Test cases, Debuging, GUI for final presentation
+
+James - Input file, GUI
