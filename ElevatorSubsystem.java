@@ -22,6 +22,8 @@ public class ElevatorSubsystem extends Thread {
 	private ElevatorData elevDat;
 	private SchedulerData scheDat;
 	
+	private GUI elevatorGUI;
+	
 	//List of elevators
 	private Elevator elevatorList[];
 	
@@ -48,7 +50,7 @@ public class ElevatorSubsystem extends Thread {
 			System.exit(1);
 		}
 		*/
-		
+		elevatorGUI = new GUI();
 		schedulerAddress = null;
 		elevatorList = new Elevator[numElevators];
 		//elevatorPending = new boolean[numElevators];
@@ -56,9 +58,11 @@ public class ElevatorSubsystem extends Thread {
 		
 		//Initialize the elevators
 		for (int i = 0; i < numElevators; i ++) {
-			elevatorList[i] = (new Elevator(i, numFloors, this, 2000 + i));
+			elevatorList[i] = (new Elevator(i, numFloors, this, 2000 + i, elevatorGUI));
 			//elevatorPending[i] = false;
 		}
+		
+		
 		
 		
 	}
@@ -217,7 +221,7 @@ public class ElevatorSubsystem extends Thread {
 		/**
 		 * Elevator subsystem logic
 		 */
-		//loadErrors();
+		loadErrors();
 		
 		for (Elevator e: elevatorList) {
 			e.start();

@@ -23,6 +23,8 @@ import javax.swing.text.DefaultCaret;
  */
 public class Elevator extends Thread {
 
+	//GUI reference
+	GUI elevatorGUI;
 	// Scheduler Packet Data
 	private SchedulerData scheDat;
 
@@ -95,8 +97,8 @@ public class Elevator extends Thread {
 	 * @param eSystem
 	 *            reference to the elevator subsystem
 	 */
-	public Elevator(int elevatorNum, int numFloors, ElevatorSubsystem eSystem, int port) {
-
+	public Elevator(int elevatorNum, int numFloors, ElevatorSubsystem eSystem, int port, GUI elevatorGUI) {
+		this.elevatorGUI = elevatorGUI;
 		this.elevatorNum = elevatorNum;
 		this.numFloors = numFloors;
 		this.eSystem = eSystem;
@@ -219,6 +221,7 @@ public class Elevator extends Thread {
 			destFloors[floor - 1].add(s.getDestFloor());
 
 			print("Current requests: " + reqFloors.toString());
+			elevatorGUI.setRequestsInfo(elevatorNum, reqFloors);
 			break;
 
 		case SchedulerData.MOVE_REQUEST:
@@ -264,9 +267,9 @@ public class Elevator extends Thread {
 				destFloors[currFloor - 1].clear();
 				measure_elevatorButtons = true;
 				elevatorButtons_start = System.currentTimeMillis();
-
+				
 			}
-
+			elevatorGUI.setRequestsInfo(elevatorNum, reqFloors);
 			break;
 		case SchedulerData.DOOR_REQUEST:
 			print("Received DOOR request.");
@@ -317,6 +320,7 @@ public class Elevator extends Thread {
 					shutdown = true;
 					communicator.send();
 					print("SHUTTING DOWN...");
+					elevatorGUI.setShutdown(elevatorNum);
 				}
 			}
 
@@ -328,13 +332,18 @@ public class Elevator extends Thread {
 						currFloor = numFloors;
 					}
 					print("Currently on floor " + currFloor + ", moving up.");
+					elevatorGUI.setDirectionInfo(elevatorNum, "UP");
+					
 				} else if (movingDown) {
 					currFloor--;
 					if (currFloor <= 0) {
 						currFloor = 1;
 					}
 					print("Currently on floor " + currFloor + ", moving down.");
+					elevatorGUI.setDirectionInfo(elevatorNum, "DOWN");
 				}
+				
+				elevatorGUI.setCurrentFloorInfo(elevatorNum, currFloor);
 				wait(1000);
 			}
 		}
@@ -379,6 +388,7 @@ public class Elevator extends Thread {
 	 */
 	public void openDoor() {
 		print("Opening doors.");
+		
 		actionReady = false;
 
 		if (!errorList.isEmpty()) {
@@ -388,6 +398,7 @@ public class Elevator extends Thread {
 				doorStuck = true;
 				wait(2000);
 				print("Doors STUCK.");
+				elevatorGUI.setElevatorDoor(elevatorNum, currFloor, GUI.STUCK);
 
 				replyRequired = true;
 				communicator.send();
@@ -403,6 +414,8 @@ public class Elevator extends Thread {
 
 		wait(2000);
 		print("Doors opened.");
+		elevatorGUI.setDoorsInfo(elevatorNum, GUI.OPEN);
+		elevatorGUI.setElevatorDoor(elevatorNum, currFloor, GUI.OPEN);
 		doorOpen = true;
 		doorStuck = false;
 		actionReady = true;
@@ -421,6 +434,7 @@ public class Elevator extends Thread {
 				doorStuck = true;
 				wait(2000);
 				print("Doors STUCK.");
+				elevatorGUI.setElevatorDoor(elevatorNum, currFloor, GUI.STUCK);
 
 				replyRequired = true;
 				communicator.send();
@@ -436,6 +450,8 @@ public class Elevator extends Thread {
 
 		wait(2000);
 		print("Doors closed.");
+		elevatorGUI.setDoorsInfo(elevatorNum, GUI.CLOSED);
+		elevatorGUI.setElevatorDoor(elevatorNum, currFloor, GUI.CLOSED);
 		doorOpen = false;
 		doorStuck = false;
 		actionReady = true;

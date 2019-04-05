@@ -4,3 +4,12 @@ Floor Buttons: 1100 ms
 Floor Buttons: 60 ms
 Floor Buttons: 1087 ms
 Floor Buttons: 1096 ms
+Floor Buttons: 59 ms
+Floor Buttons: 1087 ms
+Floor Buttons: 1097 ms
+Floor Buttons: 70 ms
+Floor Buttons: 1092 ms
+Floor Buttons: 1101 ms
+Floor Buttons: 62 ms
+Floor Buttons: 86 ms
+Floor Buttons: 2100 ms

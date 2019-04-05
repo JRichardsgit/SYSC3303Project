@@ -55,22 +55,6 @@ public class GUI {
 	public static final int ODO = 3;
 
 	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					GUI window = new GUI();
-					window.frmElevators.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
-
-	/**
 	 * Create the application.
 	 */
 	public GUI() {
@@ -88,6 +72,7 @@ public class GUI {
 			floorNum = Integer.parseInt(JOptionPane.showInputDialog("How many floors?"));
 		}
 		initialize();
+		frmElevators.setVisible(true);
 	}
 
 	/**
@@ -290,9 +275,7 @@ public class GUI {
 
 	public void setRequestsInfo(int elev, ArrayList<Integer> arr) {
 		String temp = "Requests: ";
-		for (int i: arr) {
-			temp += Integer.toString(i) + " ";
-		}
+		temp += arr.toString();
 		elevInfos[elev][2].setText(temp);
 	}
 
