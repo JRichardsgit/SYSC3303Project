@@ -152,7 +152,7 @@ public class ElevatorCommunicator extends Thread {
 	public void run() {
 		while (true) {
 			receive();
-			wait(100);
+			wait(200);
 		}
 	}
 

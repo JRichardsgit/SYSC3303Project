@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Random;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
@@ -22,8 +23,8 @@ import javax.swing.text.DefaultCaret;
  * Elevator Node Implementation
  */
 public class Elevator extends Thread {
-	
-    //GUI reference
+
+	// GUI reference
 	GUI elevatorGUI;
 	// Scheduler Packet Data
 	private SchedulerData scheDat;
@@ -38,8 +39,8 @@ public class Elevator extends Thread {
 	private boolean movingUp;
 	private boolean movingDown;
 	private int currDirection;
-	
-	//CONSTANTS FOR CURRENT DIRECTION
+
+	// CONSTANTS FOR CURRENT DIRECTION
 	public final int UP = 0;
 	public final int DOWN = 1;
 	public final int IDLE = 2;
@@ -54,21 +55,9 @@ public class Elevator extends Thread {
 	// Elevator Ready flag
 	private boolean actionReady;
 
-	// Time Measurements
-	private long arrivalSensors_start;
-	private long arrivalSensors_end;
-
-	private long elevatorButtons_start;
-	private long elevatorButtons_end;
-
-	private ArrayList<String> ebMeasurements;
-	private ArrayList<String> asMeasurements;
-
-	private boolean measure_arrivalSensors = false;
-	private boolean measure_elevatorButtons = false;
-
-	private long measurementStartTime;
-	private long measurementEndTime;
+	// Timers
+	private Timer arrivalSensorsTimer;
+	private Timer elevatorButtonsTimer;
 
 	// Reference to Elevator Subsystem
 	private ElevatorSubsystem eSystem;
@@ -89,7 +78,7 @@ public class Elevator extends Thread {
 	private ArrayList<ErrorEvent> errorList;
 
 	// FloorTimers
-	private final long initializedTime;
+	private long initializedTime;
 	private long startTime, endTime, elapsedTime;
 	private long expectedTime;
 
@@ -120,7 +109,7 @@ public class Elevator extends Thread {
 		subReqFloors = new ArrayList<Integer>();
 		destFloors = new ArrayList[numFloors];
 		errorList = new ArrayList<ErrorEvent>();
-		initializedTime = System.nanoTime();
+		initializedTime = System.currentTimeMillis();
 		expectedTime = 10000;
 		actionReady = false;
 
@@ -129,8 +118,11 @@ public class Elevator extends Thread {
 		communicator = new ElevatorCommunicator(port, this);
 		communicator.start();
 
-		asMeasurements = new ArrayList<String>();
-		ebMeasurements = new ArrayList<String>();
+		arrivalSensorsTimer = new Timer("arrival_sensors.txt");
+		elevatorButtonsTimer = new Timer("elevator_buttons.txt");
+
+		arrivalSensorsTimer.start();
+		elevatorButtonsTimer.start();
 
 		for (int i = 0; i < numFloors; i++) {
 			destFloors[i] = new ArrayList<Integer>();
@@ -198,10 +190,8 @@ public class Elevator extends Thread {
 		scheDat = s;
 		int mode = s.getMode();
 
-		if (measure_arrivalSensors) {
-			arrivalSensors_end = System.currentTimeMillis();
-			measure_arrivalSensors = false;
-			addArrivalSensorMeasurement("" + (arrivalSensors_end - arrivalSensors_start));
+		if (arrivalSensorsTimer.isTiming()) {
+			arrivalSensorsTimer.endTime();
 		}
 
 		switch (mode) {
@@ -217,15 +207,15 @@ public class Elevator extends Thread {
 
 			// Add the requested floor to the list
 			if (!reqFloors.contains(floor)) {
-				switch(currDirection) {
-				case UP: 
+				switch (currDirection) {
+				case UP:
 					if (currFloor > floor) {
 						subReqFloors.add(floor);
 					} else if (currFloor < floor) {
 						reqFloors.add(floor);
 						Collections.sort(reqFloors);
 						Collections.sort(subReqFloors);
-					} 
+					}
 					break;
 				case DOWN:
 					if (currFloor < floor) {
@@ -236,15 +226,15 @@ public class Elevator extends Thread {
 						Collections.reverse(reqFloors);
 						Collections.sort(subReqFloors);
 						Collections.reverse(subReqFloors);
-					} 
+					}
 					break;
 				case IDLE:
 					reqFloors.add(floor);
 					break;
 				}
-				
+
 				if (!subReqFloors.isEmpty()) {
-					switch(currDirection) {
+					switch (currDirection) {
 					case UP:
 						if (currFloor < subReqFloors.get(0)) {
 							reqFloors.addAll(subReqFloors);
@@ -277,12 +267,15 @@ public class Elevator extends Thread {
 			ArrayList<Integer> allRequests = new ArrayList<Integer>();
 			allRequests.addAll(reqFloors);
 			allRequests.addAll(subReqFloors);
-			
+
 			elevatorGUI.setRequestsInfo(elevatorNum, allRequests);
 			break;
 
 		case SchedulerData.MOVE_REQUEST:
 			print("Received MOVE request.");
+			if (elevatorButtonsTimer.isTiming()) {
+				elevatorButtonsTimer.endTime();
+			}
 			if (doorOpen) // If door open, close the door before moving
 				closeDoor();
 
@@ -290,12 +283,6 @@ public class Elevator extends Thread {
 				moveUp();
 			} else {
 				moveDown(); // If request was to move down
-			}
-			if (measure_elevatorButtons) {
-				measure_elevatorButtons = false;
-				elevatorButtons_end = System.currentTimeMillis();
-				addElevatorButtonMeasurement("" + (elevatorButtons_end - elevatorButtons_start));
-
 			}
 			actionReady = true;
 			break;
@@ -312,7 +299,7 @@ public class Elevator extends Thread {
 				// Remove the floor that we arrived at from the requested floors
 				if (reqFloors.contains(currFloor))
 					reqFloors.remove(new Integer(currFloor));
-				
+
 				if (reqFloors.isEmpty()) {
 					currDirection = IDLE;
 					elevatorGUI.setDirectionInfo(elevatorNum, "IDLE");
@@ -326,35 +313,43 @@ public class Elevator extends Thread {
 
 				// Add all the floor destinations from people who just boarded to the requested
 				// floors
-				switch(currDirection) {
-				case UP:
-					if (currFloor < destFloors[currFloor -1].get(0)) {
-						reqFloors.removeAll(destFloors[currFloor - 1]);
+				if (!destFloors[currFloor - 1].isEmpty()) {
+					switch (currDirection) {
+					case UP:
+						if (currFloor < destFloors[currFloor - 1].get(0)) {
+							reqFloors.removeAll(destFloors[currFloor - 1]);
+							reqFloors.addAll(destFloors[currFloor - 1]);
+							Collections.sort(reqFloors);
+							destFloors[currFloor - 1].clear();
+						}
+						break;
+					case DOWN:
+						if (currFloor > destFloors[currFloor - 1].get(0)) {
+							reqFloors.removeAll(destFloors[currFloor - 1]);
+							reqFloors.addAll(destFloors[currFloor - 1]);
+							Collections.sort(reqFloors);
+							Collections.reverse(reqFloors);
+							destFloors[currFloor - 1].clear();
+						}
+						break;
+					case IDLE:
 						reqFloors.addAll(destFloors[currFloor - 1]);
 						Collections.sort(reqFloors);
 						destFloors[currFloor - 1].clear();
+						if (currFloor < reqFloors.get(0)) {
+							currDirection = UP;
+							elevatorGUI.setDirectionInfo(elevatorNum, "UP");
+						} else {
+							currDirection = DOWN;
+							elevatorGUI.setDirectionInfo(elevatorNum, "DOWN");
+						}
+						
+						break;
 					}
-					break;
-				case DOWN:
-					if (currFloor > destFloors[currFloor - 1].get(0)) {
-						reqFloors.removeAll(destFloors[currFloor - 1]);
-						reqFloors.addAll(destFloors[currFloor - 1]);
-						Collections.sort(reqFloors);
-						Collections.reverse(reqFloors);
-						destFloors[currFloor - 1].clear();
-					}
-					break;
-				case IDLE:
-					reqFloors.addAll(destFloors[currFloor - 1]);
-					Collections.sort(reqFloors);
-					destFloors[currFloor - 1].clear();
-					break;
+					elevatorButtonsTimer.startTime();
 				}
 				// Clear the destination floors from that floor
-				
-				measure_elevatorButtons = true;
-				elevatorButtons_start = System.currentTimeMillis();
-				
+
 			}
 			elevatorGUI.setRequestsInfo(elevatorNum, reqFloors);
 			break;
@@ -370,8 +365,7 @@ public class Elevator extends Thread {
 			communicator.send();
 			actionReady = true;
 			waitForInstruction();
-		}
-		else if (mode != SchedulerData.CONTINUE_REQUEST || mode != SchedulerData.DOOR_REQUEST) {
+		} else if (mode != SchedulerData.CONTINUE_REQUEST || mode != SchedulerData.DOOR_REQUEST) {
 			replyRequired = false;
 			communicator.send();
 			actionReady = true;
@@ -385,7 +379,7 @@ public class Elevator extends Thread {
 		print("Awaiting Instruction.\n");
 
 		do {
-			wait(500);
+			wait(50);
 		} while (!actionReady);
 	}
 
@@ -396,30 +390,34 @@ public class Elevator extends Thread {
 	public void moveOneFloor() {
 		// If door is open, wait until closed before moving
 		while (doorOpen && !isIdle()) {
-			wait(1000);
+			wait(50);
 		}
 
 		// If elevator is moving
 		if (!isIdle()) {
 			if (!errorList.isEmpty()) {
-				ErrorEvent e = errorList.get(0);
-				// If the elevator is stuck, shut it down
-				if (e.getType() == ErrorEvent.ELEVATOR_STUCK) {
-					if (movingUp) {
-						print("Stuck between floors " + currFloor + " and " + (currFloor + 1) + ".");
-					} else {
-						print("Stuck between floors " + currFloor + " and " + (currFloor - 1) + ".");
+				long currentTime = System.currentTimeMillis() - initializedTime;
+				Random rand = new Random();
+				if ((currentTime / 1000) > (10 + rand.nextInt(10))) {
+					ErrorEvent e = errorList.get(0);
+					// If the elevator is stuck, shut it down
+					if (e.getType() == ErrorEvent.ELEVATOR_STUCK) {
+						if (movingUp) {
+							print("Stuck between floors " + currFloor + " and " + (currFloor + 1) + ".");
+						} else {
+							print("Stuck between floors " + currFloor + " and " + (currFloor - 1) + ".");
+						}
+						shutdown = true;
+						communicator.send();
+						print("SHUTTING DOWN...");
+						elevatorGUI.setShutdown(elevatorNum);
 					}
-					shutdown = true;
-					communicator.send();
-					print("SHUTTING DOWN...");
-					elevatorGUI.setShutdown(elevatorNum);
 				}
 			}
 
 			// If it is working
 			if (!shutdown) {
-				switch(currDirection) {
+				switch (currDirection) {
 				case UP:
 					if (currFloor != reqFloors.get(0)) {
 						currFloor++;
@@ -445,6 +443,7 @@ public class Elevator extends Thread {
 					break;
 				}
 				elevatorGUI.setCurrentFloorInfo(elevatorNum, currFloor);
+				elevatorGUI.setElevatorDoor(elevatorNum, currFloor, GUI.MOVING);
 				wait(1000);
 			}
 		}
@@ -493,31 +492,36 @@ public class Elevator extends Thread {
 	 */
 	public void openDoor() {
 		print("Opening doors.");
-		
+
 		actionReady = false;
 
 		if (!errorList.isEmpty()) {
-			ErrorEvent e = errorList.get(0);
 
-			if (e.getType() == ErrorEvent.DOOR_STUCK) {
-				doorStuck = true;
-				wait(2000);
-				print("Doors STUCK.");
-				elevatorGUI.setElevatorDoor(elevatorNum, currFloor, GUI.STUCK);
+			long currentTime = System.currentTimeMillis() - initializedTime;
+			Random rand = new Random();
+			if ((currentTime / 1000) > (10 + rand.nextInt(10))) {
+				ErrorEvent e = errorList.get(0);
 
-				replyRequired = true;
-				communicator.send();
+				if (e.getType() == ErrorEvent.DOOR_STUCK) {
+					doorStuck = true;
+					wait(1000);
+					print("Doors STUCK.");
+					elevatorGUI.setElevatorDoor(elevatorNum, currFloor, GUI.STUCK);
 
-				do {
-					communicator.receive();
-					wait(2000);
-				} while (scheDat.getMode() != SchedulerData.DOOR_REQUEST);
+					replyRequired = true;
+					communicator.send();
 
-				errorList.remove(0);
+					do {
+						communicator.receive();
+						wait(1000);
+					} while (scheDat.getMode() != SchedulerData.DOOR_REQUEST);
+
+					errorList.remove(0);
+				}
 			}
 		}
 
-		wait(2000);
+		wait(1000);
 		print("Doors opened.");
 		elevatorGUI.setDoorsInfo(elevatorNum, GUI.OPEN);
 		elevatorGUI.setElevatorDoor(elevatorNum, currFloor, GUI.OPEN);
@@ -534,26 +538,30 @@ public class Elevator extends Thread {
 		actionReady = false;
 
 		if (!errorList.isEmpty()) {
-			ErrorEvent e = errorList.get(0);
-			if (e.getType() == ErrorEvent.DOOR_STUCK) {
-				doorStuck = true;
-				wait(2000);
-				print("Doors STUCK.");
-				elevatorGUI.setElevatorDoor(elevatorNum, currFloor, GUI.STUCK);
+			long currentTime = System.currentTimeMillis() - initializedTime;
+			Random rand = new Random();
+			if ((currentTime / 1000) > (10 + rand.nextInt(10))) {
+				ErrorEvent e = errorList.get(0);
+				if (e.getType() == ErrorEvent.DOOR_STUCK) {
+					doorStuck = true;
+					wait(1000);
+					print("Doors STUCK.");
+					elevatorGUI.setElevatorDoor(elevatorNum, currFloor, GUI.STUCK);
 
-				replyRequired = true;
-				communicator.send();
-				communicator.receive();
+					replyRequired = true;
+					communicator.send();
+					communicator.receive();
 
-				do {
-					wait(2000);
-				} while (scheDat.getMode() != SchedulerData.DOOR_REQUEST);
+					do {
+						wait(1000);
+					} while (scheDat.getMode() != SchedulerData.DOOR_REQUEST);
 
-				errorList.remove(0);
+					errorList.remove(0);
+				}
 			}
 		}
 
-		wait(2000);
+		wait(1000);
 		print("Doors closed.");
 		elevatorGUI.setDoorsInfo(elevatorNum, GUI.CLOSED);
 		elevatorGUI.setElevatorDoor(elevatorNum, currFloor, GUI.CLOSED);
@@ -578,42 +586,8 @@ public class Elevator extends Thread {
 			errType = ElevatorData.NO_ERROR;
 		}
 
-		return new ElevatorData(elevatorNum, errType, currFloor, reqFloors, movingUp, movingDown, currDirection, doorOpen, shutdown,
-				replyRequired);
-	}
-
-	public void addElevatorButtonMeasurement(String measurement) {
-		ebMeasurements.add(measurement);
-	}
-
-	public void addArrivalSensorMeasurement(String measurement) {
-		asMeasurements.add(measurement);
-	}
-
-	public void saveToArrivalSensorsFile() throws IOException {
-		File file = new File("Assets\\Measurements\\arrival_sensors.txt");
-		if (!file.exists()) {
-			file.createNewFile();
-		}
-		FileWriter fileWriter = new FileWriter(file, true);
-		BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-		for (String measurement : asMeasurements) {
-			bufferedWriter.write(measurement + " ms\n");
-		}
-		bufferedWriter.close();
-	}
-
-	public void saveToElevatorButtonsFile() throws IOException {
-		File file = new File("Assets\\Measurements\\elevator_buttons.txt");
-		if (!file.exists()) {
-			file.createNewFile();
-		}
-		FileWriter fileWriter = new FileWriter(file, true);
-		BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-		for (String measurement : ebMeasurements) {
-			bufferedWriter.write(measurement + " ms\n");
-		}
-		bufferedWriter.close();
+		return new ElevatorData(elevatorNum, errType, currFloor, reqFloors, movingUp, movingDown, currDirection,
+				doorOpen, shutdown, replyRequired);
 	}
 
 	/**
@@ -645,7 +619,6 @@ public class Elevator extends Thread {
 	public void run() {
 
 		print("Started.");
-		measurementStartTime = System.currentTimeMillis();
 		while (true) {
 
 			// If there are requested floors, and the elevator is ready to move
@@ -670,8 +643,7 @@ public class Elevator extends Thread {
 					replyRequired = true;
 					actionReady = false;
 
-					measure_arrivalSensors = true;
-					arrivalSensors_start = System.currentTimeMillis();
+					arrivalSensorsTimer.startTime();
 					communicator.send();
 
 					// Pending for reply from Scheduler
@@ -679,22 +651,8 @@ public class Elevator extends Thread {
 				}
 
 			}
-
-			measurementEndTime = System.currentTimeMillis();
-			long elapsedTime = measurementEndTime - measurementStartTime;
-
-			if ((elapsedTime / 1000) > 30) {
-				try {
-					saveToArrivalSensorsFile();
-					saveToElevatorButtonsFile();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
 			// Slow down a bit
 			wait(500);
-
 		}
 	}
 

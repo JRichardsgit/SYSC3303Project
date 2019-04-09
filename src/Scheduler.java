@@ -33,6 +33,7 @@ public class Scheduler {
 
 	// Elevator Data List
 	private ElevatorData elevatorList[];
+	private boolean upToDate[];
 
 	// Elevator Routing
 	private ArrayList<ElevatorData> potentialRoutes;
@@ -87,10 +88,12 @@ public class Scheduler {
 		pendRequests = new ArrayList<FloorData>(); 
 
 		elevatorList = new ElevatorData[numElevators];
+		upToDate = new boolean[numElevators];
 		for (int i = 0; i < numElevators; i++) {
 			// Assume same starting position as set in elevator subsystem
 			elevatorList[i] = new ElevatorData(i, ElevatorData.NO_ERROR, 
 					1, new ArrayList<Integer>(), false, false, 2, false, false, true);
+			upToDate[i] = true;
 		}
 
 	}
@@ -269,6 +272,7 @@ public class Scheduler {
 						
 						elevatorAddress = receivePacket.getAddress();
 						elevatorList[elevDat.getElevatorNumber()] = elevDat;
+						upToDate[elevDat.getElevatorNumber()] = true;
 						displayElevatorStates();
 						manageElevators();
 					}
@@ -345,13 +349,13 @@ public class Scheduler {
 				//If elevator has not reached it's current destination
 				else if (!e.getRequestedFloors().isEmpty()) {
 					// If elevator is above floor, move down, close doors
-					if (currentFloor > e.getRequestedFloors().get(0) && e.isIdle()) {
+					if (currentFloor > e.getRequestedFloors().get(0) && (e.doorOpened() || e.isIdle())) {
 						print("SIGNAL MOVE DOWN to elevator: " + e.getElevatorNumber());
 						s = new SchedulerData(e.getElevatorNumber(), SchedulerData.MOVE_REQUEST, false, true,
 								false);
 					}
 					// If elevator is below floor, move up, close doors
-					else if (currentFloor < e.getRequestedFloors().get(0) && e.isIdle()) {
+					else if (currentFloor < e.getRequestedFloors().get(0) && (e.doorOpened() || e.isIdle())) {
 						print("SIGNAL MOVE UP to elevator: " + e.getElevatorNumber());
 						s = new SchedulerData(e.getElevatorNumber(), SchedulerData.MOVE_REQUEST, true, false,
 								false);
@@ -404,7 +408,7 @@ public class Scheduler {
 		boolean caseTrue = false;
 		for (int i = 0; i < elevatorList.length; i++) {
 			//if(elevDat.isOperational()) {
-			if (floor == elevatorList[i].getCurrentFloor()) {
+			if (floor == elevatorList[i].getCurrentFloor() && upToDate[i]) {
 				caseTrue = true;
 				potentialRoutes.add(elevatorList[i]);
 			}
@@ -654,6 +658,8 @@ public class Scheduler {
 						print("ROUTING CASE 7 - potential routes " + potentialRoutes.size());
 						routedElevator = closestElevator();
 					}
+				} else {
+					routedElevator = closestElevator();
 				}
 
 			}
@@ -663,6 +669,7 @@ public class Scheduler {
 				scheDat = new SchedulerData(routedElevator, SchedulerData.FLOOR_REQUEST, floorLamps, floor, floorDat.getDestFloor());
 				elevatorSend(scheDat);
 				completedRequests.add(fd);
+				upToDate[routedElevator] = false;
 			}
 		}
 		pendRequests.removeAll(completedRequests);
@@ -715,7 +722,7 @@ public class Scheduler {
 			c.receive();
 			c.processAndSend();
 			//Slow down
-			c.wait(500);
+			c.wait(50);
 		}
 
 	}

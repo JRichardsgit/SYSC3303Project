@@ -149,14 +149,6 @@ public class FloorParser extends Thread {
 				}
 			}
 		}
-		
-		//After all the requests have been sent save measurements to the file
-		try {
-			fSystem.saveToFile();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 	
 }

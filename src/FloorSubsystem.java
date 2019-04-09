@@ -32,14 +32,8 @@ public class FloorSubsystem extends Thread {
 	//IP address
 	InetAddress address;
 	
-	private long floorButtons_start;
-	private long floorButtons_end;
-	private boolean measure_floorButtons = false;
-	
-	private File file;
-	private FileWriter fileWriter;
-	private BufferedWriter bufferedWriter;
-	private ArrayList<String> measurements;
+	//Timer
+	private Timer floorButtonsTimer;
 
 	//Data Structures for relaying data
 	private FloorData floorDat;
@@ -78,7 +72,9 @@ public class FloorSubsystem extends Thread {
 		
 		communicator = new FloorCommunicator(this);
 		communicator.start();
-		measurements = new ArrayList<String>();
+		
+		floorButtonsTimer = new Timer("floor_buttons.txt");
+		floorButtonsTimer.start();
 		
 		try {
 
@@ -99,7 +95,8 @@ public class FloorSubsystem extends Thread {
 	public String selectFile() {
 		JFileChooser fc = new JFileChooser();
 		fc.setCurrentDirectory(new File("Assets\\Request Files"));
-		fc.revalidate();
+		fc.setLocation(100 + (425 * 3), 350);
+
         int returnVal = fc.showDialog(fc, "Select File");
         
         if (returnVal == JFileChooser.APPROVE_OPTION) {
@@ -150,10 +147,8 @@ public class FloorSubsystem extends Thread {
 		int mode = sfdata.getMode();
 		switch(mode) {
 		case SchedulerFloorData.CONFIRM_MESSAGE:
-			if (measure_floorButtons) {
-				measure_floorButtons = false;
-				floorButtons_end = System.currentTimeMillis();
-				addMeasurement("" + (floorButtons_end - floorButtons_start));
+			if (floorButtonsTimer.isTiming()) {
+				floorButtonsTimer.endTime();
 			}
 			break;
 		case SchedulerFloorData.UPDATE_MESSAGE:
@@ -161,22 +156,6 @@ public class FloorSubsystem extends Thread {
 		}
 	}
 	
-	public void addMeasurement(String measurement) {
-		measurements.add(measurement);
-	}
-	
-	public void saveToFile() throws IOException {
-		File file = new File("Assets\\Measurements\\floor_buttons.txt");
-		if (file.exists()) {
-			file.createNewFile();
-		}
-		FileWriter fileWriter = new FileWriter(file, true);
-		BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-		for (String measurement: measurements) {
-			bufferedWriter.write(measurement + " ms\n");
-		}
-		bufferedWriter.close();
-	}
 
 	/**
 	 * Return the last sent floor data packet
@@ -204,8 +183,7 @@ public class FloorSubsystem extends Thread {
 		floor.pressUp();
 		floor.setDestination(destFloor);
 		
-		measure_floorButtons = true;
-		floorButtons_start = System.currentTimeMillis();
+		floorButtonsTimer.startTime();
 		communicator.send(floor.getFloorData());
 	}
 
@@ -218,8 +196,7 @@ public class FloorSubsystem extends Thread {
 		floor.pressDown();
 		floor.setDestination(destFloor);
 
-		measure_floorButtons = true;
-		floorButtons_start = System.currentTimeMillis();
+		floorButtonsTimer.startTime();
 		communicator.send(floor.getFloorData());
 	}
 

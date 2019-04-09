@@ -314,7 +314,11 @@ public class GUI {
 				floors[elev][floor - 1].setIcon(new ImageIcon("Assets\\Closed.png"));
 			}
 			else if(status == MOVING) {
-				floors[elev][floor - 1].setIcon(new ImageIcon("Assets\\Moving.png"));
+				floors[elev][floor - 1].setIcon(new ImageIcon("Assets\\Moving.jpg"));
+				if (floor > 1)
+					floors[elev][floor - 2].setIcon(new ImageIcon("Assets\\Closed.png"));
+				if (floor < 22)
+					floors[elev][floor].setIcon(new ImageIcon("Assets\\Closed.png"));
 			}
 		}
 	}
