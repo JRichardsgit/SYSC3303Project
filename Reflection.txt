@@ -1,0 +1,5 @@
+Reflection on your design - what parts do you like and what parts should be redone
+
+We believe our project was overall done well and met the requirements. We liked the GUI part since it made it easier to
+understand whats going on and more user friendly. One thing that can be done better is the effeciency of the scheduler by making it do more
+things then the requirements by going above and beyond. Overall, thanks to TA Ian and the team work, the project was done well.
