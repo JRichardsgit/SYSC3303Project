@@ -20,13 +20,38 @@ This project aims to design a real time elevator control system that will quickl
 * Node of the ElevatorSubsystem; handles it's own movement, opening/closing of doors, keeps track of all pending floor requests, lamps, and updates the scheduler about its status
 
 ## Setup Instructions:
+In order to run the system on one computer: 
+Run > Main as a Java Application
 
-#### 1. Run ElevatorSubsystem.java
-#### 2. Run Scheduler.java
-#### 3. Run FloorSubsystem.java
+When prompted to input values:
+	Select -> Use Defaults
+
+When prompted for selecting the run configurations for the floor subsystem and scheduler:
+	Select -> Same Computer As Elevator Subsystem
+	Select -> Same Computer As Scheduler
+
+When prompted to select a request file:
+	Select -> default_values.txt
+
+Alternatively, 
+In order to run the system on separate computers, run each class on its respective computer in the following order
+	Run > ElevatorSubsystem.java as a Java Application
+	Run > Scheduler.java as a Java Application
+	Run > FloorSubsystem.java as a Java Application
+
+When prompted to input values:
+	Select -> Use Defaults
+
+When prompted for selecting the run configurations for the floor subsystem and scheduler:
+Select -> Separate Computer
+Enter the Elevator subsystem’s  IP address
+	Select -> Separate Computer
+	Enter the Scheduler’s IP address
+
+When prompted to select a request file:
+	Select -> default_values.txt
 
 
-* After, Use the "display selected console" to show each console output, starting from floor, then scheduler output, then elevator output.
 
 #### System Flow: 
 * Floor requests an elevator and sends it to the scheduler
@@ -36,6 +61,8 @@ This project aims to design a real time elevator control system that will quickl
 * Elevator that receives the request responds to the scheduler and updates it about it's status
 
 #### Testing
-* Testing and error handling are incorporated in the respective test cases (ElevatorTest, FloorTest, SchedulerTest)
-* Run each test case as a java application, separately
+In order to run the test cases, in Eclipse:
+	Run > TestCases.java 
+
+All Tests should pass.
 
