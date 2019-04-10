@@ -34,6 +34,7 @@ public class FloorSubsystem extends Thread {
 	
 	//Timer
 	private Timer floorButtonsTimer;
+	private boolean measureValues;
 
 	//Data Structures for relaying data
 	private FloorData floorDat;
@@ -53,7 +54,7 @@ public class FloorSubsystem extends Thread {
 	 * Create a new floor subsystem
 	 * @param numFloors number of floors
 	 */
-	public FloorSubsystem(int numFloors) {
+	public FloorSubsystem(int numFloors, boolean measureValues) {
 		try {
 			// Construct a datagram socket and bind it to any available
 			// port on the local host machine. This socket will be used to
@@ -65,6 +66,7 @@ public class FloorSubsystem extends Thread {
 		}
 
 		floors = new Floor[numFloors];
+		this.measureValues = measureValues;
 
 		for (int i = 0; i < numFloors; i ++) {
 			floors[i] = new Floor(i + 1, this);
@@ -73,8 +75,10 @@ public class FloorSubsystem extends Thread {
 		communicator = new FloorCommunicator(this);
 		communicator.start();
 		
-		floorButtonsTimer = new Timer("floor_buttons.txt");
-		floorButtonsTimer.start();
+		if (measureValues) {
+			floorButtonsTimer = new Timer("floor_buttons.txt");
+			floorButtonsTimer.start();
+		}
 		
 		try {
 
@@ -85,11 +89,10 @@ public class FloorSubsystem extends Thread {
 			e.printStackTrace();
 		}
 		
+		createAndShowGUI();
 		
 		parser = new FloorParser(this, numFloors, selectFile());
 		parser.start();
-		
-		createAndShowGUI();
 	}
 	
 	public String selectFile() {
@@ -97,7 +100,7 @@ public class FloorSubsystem extends Thread {
 		fc.setCurrentDirectory(new File("Assets\\Request Files"));
 		fc.setLocation(100 + (425 * 3), 350);
 
-        int returnVal = fc.showDialog(fc, "Select File");
+        int returnVal = fc.showDialog(floorSystemLog, "Select File");
         
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             return fc.getSelectedFile().getName();
@@ -137,19 +140,25 @@ public class FloorSubsystem extends Thread {
 		Container newContentPane = schedulerPanel;
 		frame.setContentPane(newContentPane);
 		frame.setPreferredSize(new Dimension(500, 300));
-		frame.setLocation(100 + (425 * 3), 350);
+		frame.setLocation(100 + (425 * 3), 650);
 		//Display the window.
 		frame.pack();
 		frame.setVisible(true);
 	}
 
+	/**
+	 * Process the scheduler packet
+	 * @param sfdata
+	 */
 	public void processPacket(SchedulerFloorData sfdata) {
 		int mode = sfdata.getMode();
 		switch(mode) {
 		case SchedulerFloorData.CONFIRM_MESSAGE:
-			if (floorButtonsTimer.isTiming()) {
-				floorButtonsTimer.endTime();
-			}
+			//End the time measurement
+			if (measureValues)
+				if (floorButtonsTimer.isTiming()) {
+					floorButtonsTimer.endTime();
+				}
 			break;
 		case SchedulerFloorData.UPDATE_MESSAGE:
 			break;
@@ -183,7 +192,9 @@ public class FloorSubsystem extends Thread {
 		floor.pressUp();
 		floor.setDestination(destFloor);
 		
-		floorButtonsTimer.startTime();
+		if (measureValues)
+			floorButtonsTimer.startTime();
+		
 		communicator.send(floor.getFloorData());
 	}
 
@@ -196,7 +207,9 @@ public class FloorSubsystem extends Thread {
 		floor.pressDown();
 		floor.setDestination(destFloor);
 
-		floorButtonsTimer.startTime();
+		if (measureValues)
+			floorButtonsTimer.startTime();
+		
 		communicator.send(floor.getFloorData());
 	}
 
@@ -215,6 +228,11 @@ public class FloorSubsystem extends Thread {
 	 */
 	public Floor getFloor(int floorNum) {
 		return floors[floorNum - 1];
+	}
+	
+	public void closeSockets() {
+		communicator.closeSockets();
+		System.exit(0);
 	}
 
 	/**
@@ -242,10 +260,10 @@ public class FloorSubsystem extends Thread {
 	public static void main(String args[]) { 
 
 		//Create a floor subsystem with 5 floors
-		FloorSubsystem c = new FloorSubsystem(22);
+		FloorSubsystem c = new FloorSubsystem(22, true);
 		
 		while(true) {
-			c.wait(100);
+			c.wait(1000);
 		}
 	}
 }

@@ -130,7 +130,7 @@ public class Scheduler {
         Container newContentPane = schedulerPanel;
         frame.setContentPane(newContentPane);
         frame.setPreferredSize(new Dimension(500, 300));
-        frame.setLocation(100 + (425 * 3), 50);
+        frame.setLocation(100 + (425 * 3), 350);
         //Display the window.
         frame.pack();
         frame.setVisible(true);
@@ -143,6 +143,7 @@ public class Scheduler {
 		// We're finished, so close the sockets.
 		sendSocket.close();
 		receiveSocket.close();
+		System.exit(0);
 	}
 
 	/**

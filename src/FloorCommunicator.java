@@ -86,7 +86,6 @@ public class FloorCommunicator extends Thread {
 		receivePacket = new DatagramPacket(data, data.length);
 		// Block until a datagram packet is received from receiveSocket.
 		try {
-			// elevator.print("Waiting for packet...");
 			sendReceiveSocket.receive(receivePacket);
 			schedulerAddress = receivePacket.getAddress();
 
@@ -98,7 +97,6 @@ public class FloorCommunicator extends Thread {
 		}
 
 		try {
-			// Retrieve the ElevatorData object from the receive packet
 			ByteArrayInputStream byteStream = new ByteArrayInputStream(data);
 			ObjectInputStream is;
 			is = new ObjectInputStream(new BufferedInputStream(byteStream));

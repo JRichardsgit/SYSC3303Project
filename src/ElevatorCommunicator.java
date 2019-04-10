@@ -118,8 +118,10 @@ public class ElevatorCommunicator extends Thread {
 				e.printStackTrace();
 			}
 			
+			
 			elevator.print("Received packet from address: " + schedulerAddress);
 			elevator.processPacket(scheDat);
+			elevator.wake();
 		}	
 		
 		else {

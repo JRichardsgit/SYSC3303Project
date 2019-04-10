@@ -53,7 +53,7 @@ public class GUI {
 	private JPanel[] elevInfoPanels;
 	private static final int DEFAULT_COLUMN_WIDTH = 70;
 	private static final int DEFAULT_ROW_HEIGHT = 30;
-	private static final int DEFUALT_FLOOR_ROW_HEIGHT = 50;
+	private static final int DEFAULT_FLOOR_ROW_HEIGHT = 50;
 	private static final int EXTRA_GUI_WIDTH = 160;
 	private static final double DEFAULT_ROW_WEIGHT = 1.0;
 
@@ -82,9 +82,17 @@ public class GUI {
 		}
 		
 		initialize();
-		
-		
-		
+	}
+	
+	/**
+	 * Initialize with preset values
+	 * @param floorNum
+	 * @param elevNum
+	 */
+	public GUI(int floorNum, int elevNum) {
+		this.floorNum = floorNum;
+		this.elevNum = elevNum;
+		initialize();
 	}
 
 	/**
@@ -159,7 +167,7 @@ public class GUI {
 		gbc_floorTitlePanel.gridy = 0;
 		displayPanel.add(floorTitlePanel, gbc_floorTitlePanel);
 		GridBagLayout gbl_floorTitlePanel = new GridBagLayout();
-		gbl_floorTitlePanel.columnWidths = new int[] {DEFUALT_FLOOR_ROW_HEIGHT};
+		gbl_floorTitlePanel.columnWidths = new int[] {DEFAULT_FLOOR_ROW_HEIGHT};
 		int[] tempArr = new int[floorNum];
 		//initialize the temp array
 		for (int j = 0; j < floorNum; j++) {
@@ -209,7 +217,7 @@ public class GUI {
 			//create the floors for the elevator
 			for (int j = 0; j < floorNum; j++) {
 				floors[i-1][floorNum - 1 - j] = new JLabel("");
-				floors[i-1][floorNum - 1 - j].setIcon(new ImageIcon("Assets\\Closed.png"));
+				floors[i-1][floorNum - 1 - j].setIcon(new ImageIcon("Assets\\Images\\Closed.png"));
 				floors[i-1][floorNum - 1 - j].setHorizontalAlignment(SwingConstants.CENTER);
 				GridBagConstraints gbc_floor = new GridBagConstraints();
 				gbc_floor.fill = GridBagConstraints.BOTH;
@@ -218,6 +226,8 @@ public class GUI {
 				gbc_floor.gridy = j;
 				displays[i - 1].add(floors[i-1][floorNum - 1 - j], gbc_floor);
 			}
+			
+			floors[i-1][0].setIcon(new ImageIcon("Assets\\Images\\Moving.jpg"));
 
 		}
 
@@ -263,7 +273,7 @@ public class GUI {
 			elevInfoPanels[i].add(elevInfos[i][3]);
 		}
 
-		File audioFile = new File("m.wav");
+		File audioFile = new File("Assets\\m.wav");
 		AudioInputStream audioStream = null;
 		try {
 			audioStream = AudioSystem.getAudioInputStream(audioFile);
@@ -305,20 +315,20 @@ public class GUI {
 	public void setElevatorDoor(int elev, int floor, int status) {
 		if( elev <= elevNum && floor <= floorNum) {
 			if(status == OPEN) {
-				floors[elev][floor - 1].setIcon(new ImageIcon("Assets\\Open.png"));
+				floors[elev][floor - 1].setIcon(new ImageIcon("Assets\\Images\\Open.png"));
 			}
 			else if(status == STUCK) {
-				floors[elev][floor - 1].setIcon(new ImageIcon("Assets\\Stuck.png"));
+				floors[elev][floor - 1].setIcon(new ImageIcon("Assets\\Images\\Stuck.png"));
 			}
 			else if(status == CLOSED) {
-				floors[elev][floor - 1].setIcon(new ImageIcon("Assets\\Closed.png"));
+				floors[elev][floor - 1].setIcon(new ImageIcon("Assets\\Images\\Closed.png"));
 			}
 			else if(status == MOVING) {
-				floors[elev][floor - 1].setIcon(new ImageIcon("Assets\\Moving.jpg"));
+				floors[elev][floor - 1].setIcon(new ImageIcon("Assets\\Images\\Moving.jpg"));
 				if (floor > 1)
-					floors[elev][floor - 2].setIcon(new ImageIcon("Assets\\Closed.png"));
+					floors[elev][floor - 2].setIcon(new ImageIcon("Assets\\Images\\Closed.png"));
 				if (floor < 22)
-					floors[elev][floor].setIcon(new ImageIcon("Assets\\Closed.png"));
+					floors[elev][floor].setIcon(new ImageIcon("Assets\\Images\\Closed.png"));
 			}
 		}
 	}
@@ -361,14 +371,19 @@ public class GUI {
 	public void setShutdown(int elev) {
 		//shutdown all floors
 		for (int i = 0; i <floorNum; i++) {
-			floors[elev][i].setIcon(new ImageIcon("Assets\\Shutdown.png"));
+			floors[elev][i].setIcon(new ImageIcon("Assets\\Images\\Shutdown.png"));
 		}
 		setDirectionInfo(elev, "SHUTDOWN");
 		
 		setDoorsInfo(elev, 3);
 	}
 	
-	public static void main(String[] args) {
-		GUI g = new GUI();
+	public int getNumElevators() {
+		return elevNum;
 	}
+	
+	public int getNumFloors() {
+		return floorNum;
+	}
+
 }

@@ -11,144 +11,50 @@ import java.util.ArrayList;
 
 public class ElevatorSubsystem extends Thread {
 
-	//Sockets and Packets
-	DatagramPacket receivePacket;
-	DatagramSocket receiveSocket;
-	
-	//Scheduler Socket Address 
-	InetAddress schedulerAddress;
-
-	//Data Structures for relaying data
-	private ElevatorData elevDat;
-	private SchedulerData scheDat;
-	
+	//Reference to the GUI
 	private GUI elevatorGUI;
 	
 	//List of elevators
 	private Elevator elevatorList[];
 	
-	//To check if an elevator should be waiting for a request
-	//private boolean elevatorPending[];
-	
 	//Error List
 	private ArrayList<ErrorEvent> errorList;
 	
 	/**
-	 * Create a new elevator subsystem with numElevators
+	 * Create a new elevator subsystem with numElevators and numFloors
 	 * @param numElevators the number of elevators in the system
 	 */
-	public ElevatorSubsystem( int numFloors, int numElevators) {
-		/*
-		try {
-			// Construct a datagram socket and bind it to port 2000
-			// on the local host machine. This socket will be used to
-			// receive UDP Datagram packets.
-			receiveSocket = new DatagramSocket(2000);
-
-		} catch (SocketException se) {
-			se.printStackTrace();
-			System.exit(1);
-		}
-		*/
-		schedulerAddress = null;
+	public ElevatorSubsystem(int numFloors, int numElevators, boolean measureValues) {
 		elevatorList = new Elevator[numElevators];
 		//elevatorPending = new boolean[numElevators];
 		errorList = new ArrayList<ErrorEvent>();
 		
-		elevatorGUI = new GUI();
+		elevatorGUI = new GUI(numFloors, numElevators);
 		//Initialize the elevators
 		for (int i = 0; i < numElevators; i ++) {
-			elevatorList[i] = (new Elevator(i, numFloors, this, 2000 + i, elevatorGUI));
+			elevatorList[i] = (new Elevator(i, numFloors, this, 2000 + i, elevatorGUI, measureValues));
+			//elevatorPending[i] = false;
+		}
+	}
+	
+	/**
+	 * Create a new elevator subsystem with elevators and floors to be determined
+	 */
+	public ElevatorSubsystem(boolean measureValues) {
+		//Initialize the GUI and ask user for elevators and floors
+		elevatorGUI = new GUI();
+		
+		elevatorList = new Elevator[elevatorGUI.getNumElevators()];
+		//elevatorPending = new boolean[numElevators];
+		errorList = new ArrayList<ErrorEvent>();
+		
+		//Initialize the elevators
+		for (int i = 0; i < elevatorGUI.getNumElevators(); i ++) {
+			elevatorList[i] = (new Elevator(i, elevatorGUI.getNumFloors(), this, 2000 + i, elevatorGUI, measureValues));
 			//elevatorPending[i] = false;
 		}
 	}
 
-
-//	/**
-//	 * Receive a packet from the scheduler
-//	 */
-//	public void receive() {
-//		// Construct a DatagramPacket for receiving packets up
-//		// to 5000 bytes long (the length of the byte array).
-//
-//		byte data[] = new byte[5000];
-//		receivePacket = new DatagramPacket(data, data.length);
-//		print("Waiting for Packet.\n");
-//
-//		// Block until a datagram packet is received from receiveSocket.
-//		try {
-//			//print("Waiting..."); // so we know we're waiting
-//			receiveSocket.receive(receivePacket);
-//			
-//			if (schedulerAddress == null) {
-//				schedulerAddress = receivePacket.getAddress();
-//				
-//				for (Elevator elevator: elevatorList) {
-//					elevator.setSchedulerAddress(schedulerAddress);
-//				}
-//			}
-//			
-//		} catch (IOException e) {
-//			print("IO Exception: likely:");
-//			print("Receive Socket Timed Out.\n" + e);
-//			e.printStackTrace();
-//			System.exit(1);
-//		}
-//		
-//		try {
-//			//Retrieve the ElevatorData object from the receive packet
-//			ByteArrayInputStream byteStream = new ByteArrayInputStream(data);
-//			ObjectInputStream is;
-//			is = new ObjectInputStream(new BufferedInputStream(byteStream));
-//			Object o = is.readObject();
-//			is.close();
-//			
-//			scheDat = (SchedulerData) o;
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		} catch (ClassNotFoundException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//
-//		print("Packet received.");
-//	}
-
-	/**
-	 * Returns the last sent elevator packet
-	 * @return the last sent elevator packet
-	 */
-	public ElevatorData getElevatorData() {
-		return elevDat;
-	}
-	
-//	/**
-//	 * Set the waiting flag on, pending for a packet
-//	 * @param elevatorNum
-//	 * @param pending
-//	 */
-//	public void setPending(int elevatorNum, boolean pending) {
-//		elevatorPending[elevatorNum] = pending;
-//	}
-	
-//	/**
-//	 * Returns true if that elevator should be pending for a packet, false otherwise
-//	 * @param elevatorNum
-//	 * @return
-//	 */
-//	public boolean isPending(int elevatorNum) {
-//		return elevatorPending[elevatorNum];
-//	}
-	
-	/**
-	 * Returns the last received scheduler packet
-	 * @return the last received scheduler packet
-	 */
-	public SchedulerData getSchedulerData() {
-		return scheDat;
-	}
-	
 	/**
 	 * Returns the elevator with the corresponding elevator number
 	 * @param elevatorNum the elevator number
@@ -157,25 +63,6 @@ public class ElevatorSubsystem extends Thread {
 	public Elevator getElevator(int elevatorNum) {
 		return elevatorList[elevatorNum];
 	}
-	
-//	/**
-//	 * Route the received packet to the corresponding elevator
-//	 */
-//	public void routePacket() {
-//		int routedElevatorNumber = scheDat.getElevatorNumber();
-//		Elevator routedElevator = elevatorList[routedElevatorNumber];
-//		
-//		print("Routing to Elevator " + routedElevatorNumber + ".\n");
-//
-//		//Elevator stops waiting, and is ready to receive the packet
-//		elevatorPending[routedElevatorNumber] = false;
-//		
-//		//Delay so that the elevator can finish waiting
-//		wait(1000);
-//		
-//		//Elevator receives the packet
-//		routedElevator.receiveRequest(scheDat);
-//	}
 	
 	public void loadErrors() {
 		//Hard Coded error events
@@ -186,11 +73,14 @@ public class ElevatorSubsystem extends Thread {
 	}
 	
 	/**
-	 * Close the sockets
+	 * Close the sockets of all elevators
 	 */
 	public void closeSockets() {
 		// We're finished, so close the sockets.
-		receiveSocket.close();
+		for (Elevator e: elevatorList) {
+			e.closeSockets();
+		}
+		System.exit(0);
 	}
 	
 	/**
@@ -229,7 +119,7 @@ public class ElevatorSubsystem extends Thread {
 
 	public static void main(String args[]) {
 		//Initialize a system with 5 floors and 2 elevators
-		ElevatorSubsystem c = new ElevatorSubsystem(22, 4);
+		ElevatorSubsystem c = new ElevatorSubsystem(22, 4, true);
 		c.start();
 	}
 }
