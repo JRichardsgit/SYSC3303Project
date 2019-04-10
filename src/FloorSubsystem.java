@@ -7,6 +7,7 @@ import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.HeadlessException;
 import java.io.*;
 import java.net.*;
 import java.text.DateFormat;
@@ -18,12 +19,20 @@ import java.util.Date;
 import javax.swing.BorderFactory;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.text.DefaultCaret;
 
 public class FloorSubsystem extends Thread {
+	
+	//Run Modes
+	public final static int TEST_MODE = 2;
+	public final static int TIMING_MODE = 1;
+	public final static int DEFAULT_MODE = 0;
+	
+	private int runMode;
 
 	//Sockets and Packets
 	DatagramPacket sendPacket, receivePacket;
@@ -34,8 +43,7 @@ public class FloorSubsystem extends Thread {
 	
 	//Timer
 	private Timer floorButtonsTimer;
-	private boolean measureValues;
-
+	
 	//Data Structures for relaying data
 	private FloorData floorDat;
 	private SchedulerData scheDat;
@@ -54,7 +62,7 @@ public class FloorSubsystem extends Thread {
 	 * Create a new floor subsystem
 	 * @param numFloors number of floors
 	 */
-	public FloorSubsystem(int numFloors, boolean measureValues) {
+	public FloorSubsystem(int numFloors, int runMode) {
 		try {
 			// Construct a datagram socket and bind it to any available
 			// port on the local host machine. This socket will be used to
@@ -66,7 +74,8 @@ public class FloorSubsystem extends Thread {
 		}
 
 		floors = new Floor[numFloors];
-		this.measureValues = measureValues;
+		
+		this.runMode = runMode;
 
 		for (int i = 0; i < numFloors; i ++) {
 			floors[i] = new Floor(i + 1, this);
@@ -75,24 +84,25 @@ public class FloorSubsystem extends Thread {
 		communicator = new FloorCommunicator(this);
 		communicator.start();
 		
-		if (measureValues) {
+		if (runMode == TIMING_MODE) {
 			floorButtonsTimer = new Timer("floor_buttons.txt");
 			floorButtonsTimer.start();
 		}
 		
 		try {
-
-			//address = InetAddress.getByName("192.168.43.197");
 			address = InetAddress.getLocalHost();
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
-		createAndShowGUI();
 		
-		parser = new FloorParser(this, numFloors, selectFile());
-		parser.start();
+		if (runMode == DEFAULT_MODE || runMode == TIMING_MODE) {
+			createAndShowGUI();
+			requestAddress();
+			parser = new FloorParser(this, numFloors, selectFile());
+			parser.start();
+		}
 	}
 	
 	public String selectFile() {
@@ -106,6 +116,34 @@ public class FloorSubsystem extends Thread {
             return fc.getSelectedFile().getName();
         } 
         return "default_requests.txt";
+	}
+	
+	public void requestAddress() {
+		String[] options = {"Same Computer as Scheduler", "Separate Computer"};
+		int popUp = JOptionPane.showOptionDialog(null, "Select Floor Subsystem Run Configuration", 
+				"Confirmation", JOptionPane.INFORMATION_MESSAGE, 0, null, options, options[0]);
+		switch(popUp) {
+		case -1:
+			System.exit(0);
+		case 0:
+			try {
+				address = InetAddress.getLocalHost();
+			} catch (UnknownHostException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			break;
+		case 1:
+			try {
+				address = InetAddress.getByName(JOptionPane.showInputDialog("Enter the IP address of the scheduler:"));
+			} catch (HeadlessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (UnknownHostException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 
 	public void createAndShowGUI() {
@@ -155,7 +193,7 @@ public class FloorSubsystem extends Thread {
 		switch(mode) {
 		case SchedulerFloorData.CONFIRM_MESSAGE:
 			//End the time measurement
-			if (measureValues)
+			if (runMode == TIMING_MODE)
 				if (floorButtonsTimer.isTiming()) {
 					floorButtonsTimer.endTime();
 				}
@@ -192,7 +230,7 @@ public class FloorSubsystem extends Thread {
 		floor.pressUp();
 		floor.setDestination(destFloor);
 		
-		if (measureValues)
+		if (runMode == TIMING_MODE)
 			floorButtonsTimer.startTime();
 		
 		communicator.send(floor.getFloorData());
@@ -207,7 +245,7 @@ public class FloorSubsystem extends Thread {
 		floor.pressDown();
 		floor.setDestination(destFloor);
 
-		if (measureValues)
+		if (runMode == TIMING_MODE)
 			floorButtonsTimer.startTime();
 		
 		communicator.send(floor.getFloorData());
@@ -232,7 +270,6 @@ public class FloorSubsystem extends Thread {
 	
 	public void closeSockets() {
 		communicator.closeSockets();
-		System.exit(0);
 	}
 
 	/**
@@ -240,7 +277,8 @@ public class FloorSubsystem extends Thread {
 	 * @param message
 	 */
 	public void print(String message) {
-		floorSystemLog.append(" " + message + "\n");
+		if (runMode == DEFAULT_MODE || runMode == TIMING_MODE)
+			floorSystemLog.append(" " + message + "\n");
 	}
 
 	/**
@@ -258,12 +296,20 @@ public class FloorSubsystem extends Thread {
 
 
 	public static void main(String args[]) { 
-
-		//Create a floor subsystem with 5 floors
-		FloorSubsystem c = new FloorSubsystem(22, true);
-		
-		while(true) {
-			c.wait(1000);
+		int numFloors = 0;
+		String[] options = {"Use Defaults", "Use User Inputs"};
+		int popUp = JOptionPane.showOptionDialog(null, "Enter Set Up Values For Floor Subsystem", 
+				"Confirmation", JOptionPane.INFORMATION_MESSAGE, 0, null, options, options[0]);
+		switch(popUp) {
+		case -1:
+			System.exit(0);
+		case 0:
+			numFloors = 22; //default floors
+			break;
+		case 1:
+			numFloors = Integer.parseInt(JOptionPane.showInputDialog("How many floors?"));
 		}
+		
+		FloorSubsystem c = new FloorSubsystem(numFloors, FloorSubsystem.DEFAULT_MODE);
 	}
 }

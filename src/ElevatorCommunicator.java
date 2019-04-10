@@ -15,12 +15,15 @@ public class ElevatorCommunicator extends Thread {
 	// Socket and Packet
 	DatagramPacket sendPacket, receivePacket;
 	DatagramSocket sendSocket, receiveSocket;
+	
+	private boolean running;
 
 	private Elevator elevator;
 	private SchedulerData scheDat;
 
 	// Scheduler address for sending packets
 	private InetAddress schedulerAddress;
+	private int port;
 
 	public ElevatorCommunicator(int port, Elevator e) {
 		try {
@@ -38,7 +41,8 @@ public class ElevatorCommunicator extends Thread {
 			se.printStackTrace();
 			System.exit(1);
 		}
-
+		this.port = port;
+		running = true;
 		elevator = e;
 	}
 
@@ -108,6 +112,10 @@ public class ElevatorCommunicator extends Thread {
 				is = new ObjectInputStream(new BufferedInputStream(byteStream));
 				Object o = is.readObject();
 				is.close();
+				
+				if (o == null) {
+					closeSockets();
+				}
 
 				scheDat = (SchedulerData) o;
 			} catch (IOException e) {
@@ -141,18 +149,34 @@ public class ElevatorCommunicator extends Thread {
 			e.printStackTrace();
 		}
 	}
+	
+	public void freeSockets() {
+		try {
+			sendSocket.send(new DatagramPacket(null, 1, 1, InetAddress.getLocalHost(), port));
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
 
 	/**
 	 * Close sockets
 	 */
 	public void closeSockets() {
+		running = false;
+		
 		receiveSocket.close();
 		sendSocket.close();
+		
+		
 	}
 
 	public void run() {
-		while (true) {
+		while (running) {
 			receive();
 			wait(200);
 		}

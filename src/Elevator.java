@@ -23,6 +23,13 @@ import javax.swing.text.DefaultCaret;
  * Elevator Node Implementation
  */
 public class Elevator extends Thread {
+	
+	//Run Modes
+	public final static int TEST_MODE = 2;
+	public final static int TIMING_MODE = 1;
+	public final static int DEFAULT_MODE = 0;
+		
+    private int runMode;
 
 	// GUI reference
 	private GUI elevatorGUI;
@@ -92,11 +99,12 @@ public class Elevator extends Thread {
 	 * @param eSystem
 	 *            reference to the elevator subsystem
 	 */
-	public Elevator(int elevatorNum, int numFloors, ElevatorSubsystem eSystem, int port, GUI elevatorGUI, boolean measureValues) {
+	public Elevator(int elevatorNum, int numFloors, ElevatorSubsystem eSystem, int port, GUI elevatorGUI, int runMode) {
 		this.elevatorGUI = elevatorGUI;
 		this.elevatorNum = elevatorNum;
 		this.numFloors = numFloors;
 		this.eSystem = eSystem;
+		this.runMode = runMode;
 		movingUp = false;
 		movingDown = false;
 		currDirection = IDLE;
@@ -111,12 +119,13 @@ public class Elevator extends Thread {
 		initializedTime = System.currentTimeMillis();
 		actionReady = false;
 
-		createAndShowGUI();
+		if (runMode == DEFAULT_MODE || runMode == TIMING_MODE)
+			createAndShowGUI();
 
 		communicator = new ElevatorCommunicator(port, this);
 		communicator.start();
 
-		if (measureValues) {
+		if (runMode == TIMING_MODE) {
 			arrivalSensorsTimer = new Timer("arrival_sensors.txt");
 			elevatorButtonsTimer = new Timer("elevator_buttons.txt");
 	
@@ -602,7 +611,7 @@ public class Elevator extends Thread {
 	 * Closes sockets
 	 */
 	public void closeSockets() {
-		communicator.closeSockets();
+		communicator.freeSockets();
 	}
 
 	/**
@@ -627,6 +636,7 @@ public class Elevator extends Thread {
 	 *            the message to be printed
 	 */
 	public void print(String message) {
+		if (runMode == TIMING_MODE || runMode == DEFAULT_MODE)
 		elevatorLog.append(" Elevator " + elevatorNum + ": " + message + "\n");
 	}
 	

@@ -9,7 +9,16 @@ import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
 
+import javax.swing.JOptionPane;
+
 public class ElevatorSubsystem extends Thread {
+	
+	//Run Modes
+	public final static int TEST_MODE = 2;
+	public final static int TIMING_MODE = 1;
+	public final static int DEFAULT_MODE = 0;
+		
+	private int runMode;
 
 	//Reference to the GUI
 	private GUI elevatorGUI;
@@ -24,16 +33,23 @@ public class ElevatorSubsystem extends Thread {
 	 * Create a new elevator subsystem with numElevators and numFloors
 	 * @param numElevators the number of elevators in the system
 	 */
-	public ElevatorSubsystem(int numFloors, int numElevators, boolean measureValues) {
+	public ElevatorSubsystem(int numFloors, int numElevators, int runMode) {
 		elevatorList = new Elevator[numElevators];
 		//elevatorPending = new boolean[numElevators];
 		errorList = new ArrayList<ErrorEvent>();
-		
+	
 		elevatorGUI = new GUI(numFloors, numElevators);
+		
 		//Initialize the elevators
 		for (int i = 0; i < numElevators; i ++) {
-			elevatorList[i] = (new Elevator(i, numFloors, this, 2000 + i, elevatorGUI, measureValues));
+			elevatorList[i] = (new Elevator(i, numFloors, this, 2000 + i, elevatorGUI, runMode));
 			//elevatorPending[i] = false;
+		}
+		
+		loadErrors();
+		
+		for (Elevator e: elevatorList) {
+			e.start();
 		}
 	}
 	
@@ -50,8 +66,14 @@ public class ElevatorSubsystem extends Thread {
 		
 		//Initialize the elevators
 		for (int i = 0; i < elevatorGUI.getNumElevators(); i ++) {
-			elevatorList[i] = (new Elevator(i, elevatorGUI.getNumFloors(), this, 2000 + i, elevatorGUI, measureValues));
+			elevatorList[i] = (new Elevator(i, elevatorGUI.getNumFloors(), this, 2000 + i, elevatorGUI, runMode));
 			//elevatorPending[i] = false;
+		}
+		
+		loadErrors();
+		
+		for (Elevator e: elevatorList) {
+			e.start();
 		}
 	}
 
@@ -66,10 +88,12 @@ public class ElevatorSubsystem extends Thread {
 	
 	public void loadErrors() {
 		//Hard Coded error events
-		elevatorList[0].addError(new ErrorEvent(ErrorEvent.DOOR_STUCK, 5000));
-		elevatorList[1].addError(new ErrorEvent(ErrorEvent.ELEVATOR_STUCK, 100000));
-		elevatorList[2].addError(new ErrorEvent(ErrorEvent.DOOR_STUCK, 5000));
-		elevatorList[3].addError(new ErrorEvent(ErrorEvent.DOOR_STUCK, 5000));
+		if (elevatorList.length >= 4) {
+			elevatorList[0].addError(new ErrorEvent(ErrorEvent.DOOR_STUCK, 5000));
+			elevatorList[1].addError(new ErrorEvent(ErrorEvent.ELEVATOR_STUCK, 100000));
+			elevatorList[2].addError(new ErrorEvent(ErrorEvent.DOOR_STUCK, 5000));
+			elevatorList[3].addError(new ErrorEvent(ErrorEvent.DOOR_STUCK, 5000));
+		}
 	}
 	
 	/**
@@ -104,22 +128,23 @@ public class ElevatorSubsystem extends Thread {
 		}
 	}
 	
-	public void run() {
-		/**
-		 * Elevator subsystem logic
-		 */
-		loadErrors();
-		
-		for (Elevator e: elevatorList) {
-			e.start();
-		}
-	}
-	
-	
-
 	public static void main(String args[]) {
-		//Initialize a system with 5 floors and 2 elevators
-		ElevatorSubsystem c = new ElevatorSubsystem(22, 4, true);
-		c.start();
+		int numFloors = 0, numElevators = 0;
+		String[] options = {"Use Defaults", "Use User Inputs"};
+		int popUp = JOptionPane.showOptionDialog(null, "Enter Set Up Values For Elevator Subsystem", 
+				"Confirmation", JOptionPane.INFORMATION_MESSAGE, 0, null, options, options[0]);
+		switch(popUp) {
+		case -1:
+			System.exit(0);
+		case 0:
+			numFloors = 22; //default floors
+			numElevators = 4; //default elevators
+			break;
+		case 1:
+			numElevators = Integer.parseInt(JOptionPane.showInputDialog("How many elevators?"));
+			numFloors = Integer.parseInt(JOptionPane.showInputDialog("How many floors?"));
+		}
+		
+		ElevatorSubsystem c = new ElevatorSubsystem(numFloors, numElevators, DEFAULT_MODE);
 	}
 }

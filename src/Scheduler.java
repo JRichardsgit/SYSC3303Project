@@ -11,8 +11,16 @@ import java.awt.*;
 import javax.swing.*;
 import javax.swing.text.DefaultCaret;
 
-public class Scheduler {
-
+public class Scheduler extends Thread {
+	
+	//Run Modes
+	public final static int TEST_MODE = 2;
+	public final static int TIMING_MODE = 1;
+	public final static int DEFAULT_MODE = 0;
+		
+	private int runMode;
+	private boolean running;
+	
 	// Packets and Sockets
 	DatagramPacket floorSendPacket, elevatorSendPacket, receivePacket;
 	DatagramSocket sendSocket, receiveSocket;
@@ -47,13 +55,14 @@ public class Scheduler {
 	private ArrayList<FloorData> pendRequests;
 	
 	private JTextArea schedulerLog;
+	
 
 	/**
 	 * Create a new Scheduler with the corresponding number of floors
 	 *
 	 * @param numFloors
 	 */
-	public Scheduler(int numFloors, int numElevators) {
+	public Scheduler(int numFloors, int numElevators, int runMode) {
 		try {
 			// Construct a datagram socket and bind it to any available
 			// port on the local host machine. This socket will be used to
@@ -79,6 +88,9 @@ public class Scheduler {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		this.runMode = runMode;
+		running = true;
 
 		receiveQueue = new ArrayList<DatagramPacket>();
 
@@ -96,6 +108,40 @@ public class Scheduler {
 			upToDate[i] = true;
 		}
 
+		if (runMode == DEFAULT_MODE || runMode == TIMING_MODE) {
+			createAndShowGUI();
+			requestAddress();
+		}
+		
+		this.start();
+	}
+	
+	public void requestAddress() {
+		String[] options = {"Same Computer as Elevator Subsystem", "Separate Computer"};
+		int popUp = JOptionPane.showOptionDialog(null, "Select Scheduler Run Configuration", 
+				"Confirmation", JOptionPane.INFORMATION_MESSAGE, 0, null, options, options[0]);
+		switch(popUp) {
+		case -1:
+			System.exit(0);
+		case 0:
+			try {
+				elevatorAddress = InetAddress.getLocalHost();
+			} catch (UnknownHostException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			break;
+		case 1:
+			try {
+				elevatorAddress = InetAddress.getByName(JOptionPane.showInputDialog("Enter the IP address of the elevator subsystem:"));
+			} catch (HeadlessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (UnknownHostException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	public void createAndShowGUI() {
@@ -143,7 +189,7 @@ public class Scheduler {
 		// We're finished, so close the sockets.
 		sendSocket.close();
 		receiveSocket.close();
-		System.exit(0);
+		running = false;
 	}
 
 	/**
@@ -709,22 +755,39 @@ public class Scheduler {
 	 * @param message
 	 */
 	public void print(String message) {
-		schedulerLog.append(" " + message + "\n");
+		if (runMode == DEFAULT_MODE || runMode == TIMING_MODE)
+			schedulerLog.append(" " + message + "\n");
 	}
-
-	public static void main(String args[]) {
-		//Initialize a scheduler for a system with 5 floors and 2 elevators
-		Scheduler c = new Scheduler(22, 4);
-		c.createAndShowGUI();
+	
+	public void run() {
 		/**
 		 * Scheduler Logic
 		 */
-		while (true) {
-			c.receive();
-			c.processAndSend();
+		while (running) {
+			receive();
+			processAndSend();
 			//Slow down
-			c.wait(50);
+			wait(50);
 		}
+	}
 
+	public static void main(String args[]) {
+		int numFloors = 0, numElevators = 0;
+		String[] options = {"Use Defaults", "Use User Inputs"};
+		int popUp = JOptionPane.showOptionDialog(null, "Enter Set Up Values For Scheduler", 
+				"Confirmation", JOptionPane.INFORMATION_MESSAGE, 0, null, options, options[0]);
+		switch(popUp) {
+		case -1:
+			System.exit(0);
+		case 0:
+			numFloors = 22; //default floors
+			numElevators = 4; //default elevators
+			break;
+		case 1:
+			numElevators = Integer.parseInt(JOptionPane.showInputDialog("How many elevators?"));
+			numFloors = Integer.parseInt(JOptionPane.showInputDialog("How many floors?"));
+		}
+		
+		Scheduler c = new Scheduler(numFloors, numElevators, DEFAULT_MODE);
 	}
 }

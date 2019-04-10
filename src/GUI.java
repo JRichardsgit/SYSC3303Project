@@ -327,7 +327,7 @@ public class GUI {
 				floors[elev][floor - 1].setIcon(new ImageIcon("Assets\\Images\\Moving.jpg"));
 				if (floor > 1)
 					floors[elev][floor - 2].setIcon(new ImageIcon("Assets\\Images\\Closed.png"));
-				if (floor < 22)
+				if (floor < floorNum)
 					floors[elev][floor].setIcon(new ImageIcon("Assets\\Images\\Closed.png"));
 			}
 		}
